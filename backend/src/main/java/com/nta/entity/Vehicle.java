@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
-
 @Entity
 @Getter
 @Setter
@@ -14,16 +12,13 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Vehicle {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "vehicle_id",nullable = false)
     String id;
-    String name;
+    String capacity;
     String description;
     String icon;
-    String capacity;
-
-    @OneToMany(mappedBy = "vehicle",fetch = FetchType.LAZY)
-    Set<Shipper> shippers;
+    @Column(length = 50)
+    String name;
 }

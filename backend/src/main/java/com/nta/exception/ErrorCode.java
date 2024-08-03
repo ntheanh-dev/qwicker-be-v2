@@ -11,7 +11,10 @@ public enum ErrorCode {
     PASSWORD_INVALID(1003,"password phải ít nhất 8 kí tự",HttpStatus.BAD_REQUEST),
     AVATAR_REQUIRED(1004,"a avatar file is required", HttpStatus.BAD_REQUEST),
     //Vehicle
-    VEHICLE_NOT_FOUND(1050,"Vehicle not found",HttpStatus.BAD_REQUEST)
+    VEHICLE_NOT_FOUND(1050,"Vehicle not found",HttpStatus.BAD_REQUEST),
+
+    //Shipper
+    CREATE_SHIPPER_FAILED(1100,"Cannot create shipper due to failure of upload identify photo",HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

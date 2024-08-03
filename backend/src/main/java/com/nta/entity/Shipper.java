@@ -16,10 +16,12 @@ public class Shipper {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shipper_id",nullable = false)
     String id;
-    String identity_f;
-    String identity_b;
-    String vehicle_number;
-
+    @Column(name = "identity_f",length = 120)
+    String identityF;
+    @Column(name = "identity_b",length = 120)
+    String identityB;
+    @Column(length = 15)
+    String vehicleNumber;
     @OneToOne
     @JoinColumn(name = "user_id")
     User user;

@@ -15,13 +15,18 @@ import com.nta.repository.VehicleRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 @RequiredArgsConstructor
 public class ShipperService {
+
     ShipperRepositoy shipperRepositoy;
     ShipperMapper shipperMapper;
 
@@ -30,9 +35,12 @@ public class ShipperService {
 
     VehicleRepository vehicleRepository;
 
-    public ShipperResponse create(ShipperCreationRequest request) {
+    CloudinaryService cloudinaryService;
 
-        Vehicle v = vehicleRepository.findById(request.getVehicle_id())
+    @Transactional
+    public Shipper create(ShipperCreationRequest request) {
+
+        Vehicle v = vehicleRepository.findById(request.getVehicleId())
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_NOT_FOUND));
 
         User u = userService.createUser(userMapper.toUserCreationRequest(request));
@@ -40,8 +48,16 @@ public class ShipperService {
         shipper.setUser(u);
         shipper.setVehicle(v);
 
-        return shipperMapper.toShipperResponse(
-            shipperRepositoy.save(shipper)
-        );
+        //upload identity photo to cloudinary
+        try{
+            Map cloudinaryResponse = cloudinaryService.upload(request.getIdentityFFile());
+            Map cloudinaryResponse2 = cloudinaryService.upload(request.getIdentityBFile());
+            shipper.setIdentityF(cloudinaryResponse.get("secure_url").toString());
+            shipper.setIdentityB(cloudinaryResponse2.get("secure_url").toString());
+        } catch (RuntimeException e) {
+            throw new AppException(ErrorCode.CREATE_SHIPPER_FAILED);
+        }
+
+        return shipperRepositoy.save(shipper);
     }
 }

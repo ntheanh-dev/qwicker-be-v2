@@ -3,15 +3,13 @@ package com.nta.controller;
 import com.nta.dto.request.ShipperCreationRequest;
 import com.nta.dto.response.ApiResponse;
 import com.nta.dto.response.ShipperResponse;
+import com.nta.mapper.ShipperMapper;
 import com.nta.service.ShipperService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/shippers")
@@ -19,11 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 public class ShipperController {
     ShipperService shipperService;
-
+    ShipperMapper shipperMapper;
     @PostMapping
-    ApiResponse<ShipperResponse> create(@RequestBody @Valid ShipperCreationRequest request) {
+    ApiResponse<ShipperResponse> create(@ModelAttribute @Valid ShipperCreationRequest request) {
+        ShipperResponse response = shipperMapper.toShipperResponse(shipperService.create(request));
         return ApiResponse.<ShipperResponse>builder()
-                .result(shipperService.create(request))
+                .result(response)
                 .build();
     }
 }

@@ -11,9 +11,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShipperResponse {
-    String identity_f;
-    String identity_b;
-    String vehicle_number;
+    String identityF;
+    String identityB;
+    String vehicleNumber;
     User user;
     Vehicle vehicle;
 }

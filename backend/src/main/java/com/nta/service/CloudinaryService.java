@@ -15,7 +15,6 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
-@PropertySource("classpath:application-dev.properties")
 public class CloudinaryService {
     Cloudinary cloudinary;
 
