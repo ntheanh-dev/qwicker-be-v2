@@ -1,5 +1,7 @@
 package com.nta.service;
 
+import com.nta.exception.AppException;
+import com.nta.exception.ErrorCode;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -23,7 +25,8 @@ import java.util.Map;
 public class EmailService {
     JavaMailSender sender;
     Configuration freeMakerConfig;
-
+    RedisService redisService;
+    UserService userService;
     //model = {
     //    receiver: toEmail
     //    otp
@@ -33,11 +36,30 @@ public class EmailService {
         String subject = "Mã OTP Xác Thực Cho Tài Khoản Của Bạn";
         String templateName = "verify-otp.ftl";
 
+        //check if email has already existed
+        if(userService.existsByEmail(toEmail)) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+
         Map<String,Object> model = new HashMap<>();
         String otp = String.valueOf((int)(Math.random() * 9000) + 1000);
+        //save otp to redis
+        if(!redisService.isRedisLive()) {
+            throw new AppException(ErrorCode.REDIS_SERVER_NOT_FOUD);
+        }
+        redisService.set(toEmail,otp);
+        redisService.setTimeToLive(toEmail,3);
+
         model.put("otp",otp);
         model.put("username", username);
         sentEmail(subject,toEmail,templateName,model);
+    }
+
+    public boolean verifyOTP(String email,String otp) {
+        if(!redisService.isRedisLive()) {
+            throw new AppException(ErrorCode.REDIS_SERVER_NOT_FOUD);
+        }
+        return redisService.hasValue(email,otp);
     }
 
     public void sentEmail(String subject,String toEmail,String templateName,Map<String,Object> model) throws MessagingException, IOException, TemplateException {

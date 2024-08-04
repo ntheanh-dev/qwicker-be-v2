@@ -1,7 +1,10 @@
 package com.nta.controller;
 
 import com.nta.dto.response.ApiResponse;
+import com.nta.exception.AppException;
+import com.nta.exception.ErrorCode;
 import com.nta.service.EmailService;
+import com.nta.service.RedisService;
 import freemarker.template.TemplateException;
 import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
@@ -28,6 +31,16 @@ public class EmailController {
         emailService.sendOPTToNewEmail(username,email);
         return ApiResponse.<Void>builder()
                 .message("OTP has sent")
+                .build();
+    }
+
+    @PostMapping("/verify-otp")
+    public ApiResponse<Void> verifyOtp(@RequestParam Map<String,String> request) {
+        String email = request.get("email");
+        String otp = request.get("otp");
+        boolean isValidOTP = emailService.verifyOTP(email,otp);
+        return ApiResponse.<Void>builder()
+                .message(String.valueOf(isValidOTP))
                 .build();
     }
 }
