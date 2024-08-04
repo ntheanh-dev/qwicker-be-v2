@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
@@ -32,6 +33,7 @@ public class EmailService {
     //    otp
     //    name
     //    }
+
     public void sendOPTToNewEmail(String username,String toEmail) throws MessagingException, IOException, TemplateException {
         String subject = "Mã OTP Xác Thực Cho Tài Khoản Của Bạn";
         String templateName = "verify-otp.ftl";
@@ -62,6 +64,7 @@ public class EmailService {
         return redisService.hasValue(email,otp);
     }
 
+    @Async("taskExecutor")
     public void sentEmail(String subject,String toEmail,String templateName,Map<String,Object> model) throws MessagingException, IOException, TemplateException {
         MimeMessage mimeMessage = sender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage);
