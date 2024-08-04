@@ -29,7 +29,10 @@ public class UserService {
     private static final String DEFAULT_AVATAR_URL = "https://res.cloudinary.com/dqpo9h5s2/image/upload/v1711860995/rooms/avatar_vuwmxd.jpg";
     public User createUser(UserCreationRequest request) {
         if(userRepository.existsByUsername(request.getUsername())) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new AppException(ErrorCode.USERNAME_EXISTED);
+        }
+        if(userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
         User u = userMapper.toUser(request);
         u.setPassword(passwordEncoder.encode(request.getPassword()));
