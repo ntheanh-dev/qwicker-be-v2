@@ -1,9 +1,10 @@
 package com.nta.service;
 
 import com.nta.dto.request.UserCreationRequest;
+import com.nta.entity.Role;
 import com.nta.entity.User;
 import com.nta.exception.AppException;
-import com.nta.exception.ErrorCode;
+import com.nta.enums.ErrorCode;
 import com.nta.mapper.UserMapper;
 import com.nta.repository.UserRepository;
 import lombok.AccessLevel;
@@ -26,7 +27,9 @@ public class UserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     CloudinaryService cloudinaryService;
+    RoleService roleService;
     private static final String DEFAULT_AVATAR_URL = "https://res.cloudinary.com/dqpo9h5s2/image/upload/v1711860995/rooms/avatar_vuwmxd.jpg";
+
     public User createUser(UserCreationRequest request) {
         if(userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USERNAME_EXISTED);
@@ -36,7 +39,8 @@ public class UserService {
         }
         User u = userMapper.toUser(request);
         u.setPassword(passwordEncoder.encode(request.getPassword()));
-
+        var role = roleService.findByName("ROLE_USER").orElseThrow(() ->
+                new AppException(ErrorCode.ROLE_USER_NOT_FOUND));
         //upload avatar to cloudinary
         try{
             Map cloudinaryResponse = cloudinaryService.upload(request.getFile());
@@ -45,7 +49,12 @@ public class UserService {
             u.setAvatar(DEFAULT_AVATAR_URL);
             log.warn("Cannot upload avatar to cloudinary, use default img url instead");
         }
+        u.setRole(role);
+        return userRepository.save(u);
+    }
 
+    public User updateRole(User u,Role role) {
+        u.setRole(role);
         return userRepository.save(u);
     }
 
