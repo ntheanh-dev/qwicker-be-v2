@@ -1,7 +1,6 @@
 package com.nta.service;
 
 import com.nta.dto.request.ShipperCreationRequest;
-import com.nta.dto.response.ShipperResponse;
 import com.nta.entity.Shipper;
 import com.nta.entity.User;
 import com.nta.entity.Vehicle;
@@ -10,13 +9,10 @@ import com.nta.exception.ErrorCode;
 import com.nta.mapper.ShipperMapper;
 import com.nta.mapper.UserMapper;
 import com.nta.repository.ShipperRepositoy;
-import com.nta.repository.UserRepository;
 import com.nta.repository.VehicleRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

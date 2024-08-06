@@ -4,12 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
-@Builder
-@RequiredArgsConstructor
-@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Shipper {
     @Id
@@ -29,4 +28,10 @@ public class Shipper {
     @ManyToOne
     @JoinColumn(name = "vehicle_id")
     Vehicle vehicle;
+
+    @OneToMany(mappedBy = "shipper",fetch = FetchType.LAZY)
+    Set<Post> posts;
+
+    @OneToMany(mappedBy = "rating",fetch = FetchType.EAGER)
+    Set<Rating> ratings;
 }

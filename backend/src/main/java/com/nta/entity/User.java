@@ -1,9 +1,10 @@
 package com.nta.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Set;
 
 @Entity
 @Getter
@@ -23,6 +24,11 @@ public class User {
     String password;
     String firstName;
     String lastName;
+    @Column(nullable = false,length = 30,unique = true)
     String email;
     String avatar;
+
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    Set<Post> posts;
+
 }
