@@ -1,17 +1,18 @@
 package com.nta.exception;
 
 import com.nta.dto.response.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.nta.enums.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // Bắt exception trung trung
     @ExceptionHandler(Exception.class)
@@ -59,6 +60,17 @@ public class GlobalExceptionHandler {
         apiResponse.setMessage(errorCode.getMessage());
 
         log.error(errorCode.getMessage());
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+    @ExceptionHandler(JwtException.class)
+    ResponseEntity<ApiResponse<Object>> jwtExceptionHandler(JwtException e) {
+        log.error(e.getMessage());
+
+        ApiResponse<Object> apiResponse = new ApiResponse<>();
+
+        apiResponse.setCode(ErrorCode.INVALID_TOKEN.getCode());
+        apiResponse.setMessage(ErrorCode.INVALID_TOKEN.getMessage());
+
         return ResponseEntity.badRequest().body(apiResponse);
     }
 }

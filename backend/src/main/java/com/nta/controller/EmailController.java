@@ -1,10 +1,7 @@
 package com.nta.controller;
 
 import com.nta.dto.response.ApiResponse;
-import com.nta.exception.AppException;
-import com.nta.exception.ErrorCode;
 import com.nta.service.EmailService;
-import com.nta.service.RedisService;
 import freemarker.template.TemplateException;
 import jakarta.mail.MessagingException;
 import lombok.AccessLevel;

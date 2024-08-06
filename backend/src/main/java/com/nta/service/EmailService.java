@@ -1,7 +1,7 @@
 package com.nta.service;
 
 import com.nta.exception.AppException;
-import com.nta.exception.ErrorCode;
+import com.nta.enums.ErrorCode;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;

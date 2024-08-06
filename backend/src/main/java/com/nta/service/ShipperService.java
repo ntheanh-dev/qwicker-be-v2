@@ -1,11 +1,12 @@
 package com.nta.service;
 
 import com.nta.dto.request.ShipperCreationRequest;
+import com.nta.entity.Role;
 import com.nta.entity.Shipper;
 import com.nta.entity.User;
 import com.nta.entity.Vehicle;
 import com.nta.exception.AppException;
-import com.nta.exception.ErrorCode;
+import com.nta.enums.ErrorCode;
 import com.nta.mapper.ShipperMapper;
 import com.nta.mapper.UserMapper;
 import com.nta.repository.ShipperRepositoy;
@@ -29,17 +30,22 @@ public class ShipperService {
     UserService userService;
     UserMapper userMapper;
 
-    VehicleRepository vehicleRepository;
-
+    VehicleService vehicleService;
     CloudinaryService cloudinaryService;
+
+    RoleService roleService;
 
     @Transactional
     public Shipper create(ShipperCreationRequest request) {
 
-        Vehicle v = vehicleRepository.findById(request.getVehicleId())
+        var role = roleService.findByName("ROLE_USER").orElseThrow(() ->
+                new AppException(ErrorCode.ROLE_USER_NOT_FOUND));
+
+        Vehicle v = vehicleService.findById(request.getVehicleId())
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_NOT_FOUND));
 
         User u = userService.createUser(userMapper.toUserCreationRequest(request));
+        userService.updateRole(u,role);
         Shipper shipper = shipperMapper.toShipper(request);
         shipper.setUser(u);
         shipper.setVehicle(v);
