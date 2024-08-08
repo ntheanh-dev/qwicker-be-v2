@@ -2,6 +2,8 @@ package com.nta.configuration;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,7 +19,6 @@ import org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean;
 import java.util.Properties;
 
 @Configuration
-@PropertySource("classpath:application-dev.properties")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 public class AppConfig {
@@ -28,9 +29,9 @@ public class AppConfig {
     public Cloudinary cloudinary() {
         Cloudinary cloudinary
                 = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", env.getProperty("cloudinary.name"),
-                "api_key", env.getProperty("cloudinary.key"),
-                "api_secret", env.getProperty("cloudinary.secret"),
+                "cloud_name", env.getProperty("spring.cloudinary.key"),
+                "api_key", env.getProperty("spring.cloudinary.key"),
+                "api_secret", env.getProperty("spring.cloudinary.secret"),
                 "secure", true));
         return cloudinary;
     }
@@ -62,4 +63,5 @@ public class AppConfig {
         bean.setDefaultEncoding("UTF-8");
         return bean;
     }
+
 }

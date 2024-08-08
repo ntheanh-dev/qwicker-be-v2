@@ -8,13 +8,12 @@ import com.nta.dto.response.ApiResponse;
 import com.nta.dto.response.AuthenticationResponse;
 import com.nta.dto.response.IntrospectResponse;
 import com.nta.service.AuthenticationService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
@@ -35,10 +34,11 @@ public class AuthenticationController {
     }
 
 
-    @PostMapping("/introspect")
-    ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest introspectRequest) throws ParseException, JOSEException {
+    @PostMapping(value = "/introspect",consumes = {
+            MediaType.MULTIPART_FORM_DATA_VALUE,
+    })
+    ApiResponse<IntrospectResponse> authenticate(@ModelAttribute IntrospectRequest introspectRequest) throws ParseException, JOSEException {
         var result = authenticationService.introspect(introspectRequest);
-
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
                 .build();

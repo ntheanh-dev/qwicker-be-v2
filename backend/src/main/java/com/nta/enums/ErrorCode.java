@@ -17,6 +17,7 @@ public enum ErrorCode {
     INCORRECT_PASSWORD(1009,"Invalid password", HttpStatus.BAD_REQUEST),
     ROLE_USER_NOT_FOUND(1010,"ROLE_USER not found",HttpStatus.INTERNAL_SERVER_ERROR),
     ROLE_SHIPPER_NOT_FOUND(1011,"ROLE_SHIPPER not found",HttpStatus.INTERNAL_SERVER_ERROR),
+    UNAUTHENTICATED(1012,"unauthenticated", HttpStatus.UNAUTHORIZED),
     //Vehicle
     VEHICLE_NOT_FOUND(1050,"Vehicle not found",HttpStatus.BAD_REQUEST),
     //Redis
