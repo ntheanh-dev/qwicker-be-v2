@@ -31,6 +31,6 @@ public class User {
     @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
     Set<Post> posts;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    Role role;
+    @ManyToMany
+    Set<Role> roles;
 }

@@ -1,8 +1,10 @@
 package com.nta.dto.response;
 
-import jakarta.persistence.Column;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Set;
+
 
 @Data
 @AllArgsConstructor
@@ -15,4 +17,5 @@ public class UserResponse {
     String lastName;
     String email;
     String avatar;
+    Set<RoleResponse> roles;
 }

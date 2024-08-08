@@ -1,11 +1,13 @@
 package com.nta.service;
 
+import com.nta.constant.PredefinedRole;
 import com.nta.dto.request.UserCreationRequest;
 import com.nta.entity.Role;
 import com.nta.entity.User;
 import com.nta.exception.AppException;
 import com.nta.enums.ErrorCode;
 import com.nta.mapper.UserMapper;
+import com.nta.repository.RoleRepository;
 import com.nta.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
+import java.util.HashSet;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +30,7 @@ public class UserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     CloudinaryService cloudinaryService;
-    RoleService roleService;
+    RoleRepository roleRepository;
     private static final String DEFAULT_AVATAR_URL = "https://res.cloudinary.com/dqpo9h5s2/image/upload/v1711860995/rooms/avatar_vuwmxd.jpg";
 
     public User createUser(UserCreationRequest request) {
@@ -39,27 +42,22 @@ public class UserService {
         }
         User u = userMapper.toUser(request);
         u.setPassword(passwordEncoder.encode(request.getPassword()));
-        var role = roleService.findByName("ROLE_USER").orElseThrow(() ->
-                new AppException(ErrorCode.ROLE_USER_NOT_FOUND));
+        HashSet<Role> roles = new HashSet<>();
+        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+        u.setRoles(roles);
         //upload avatar to cloudinary
-        try{
-            Map cloudinaryResponse = cloudinaryService.upload(request.getFile());
-            u.setAvatar(cloudinaryResponse.get("secure_url").toString());
-        } catch (RuntimeException e) {
-            u.setAvatar(DEFAULT_AVATAR_URL);
-            log.warn("Cannot upload avatar to cloudinary, use default img url instead");
-        }
-        u.setRole(role);
-        return userRepository.save(u);
-    }
-
-    public User updateRole(User u,Role role) {
-        u.setRole(role);
+//        try{
+//            Map cloudinaryResponse = cloudinaryService.upload(request.getFile());
+//            u.setAvatar(cloudinaryResponse.get("secure_url").toString());
+//        } catch (RuntimeException e) {
+//            u.setAvatar(DEFAULT_AVATAR_URL);
+//            log.warn("Cannot upload avatar to cloudinary, use default img url instead");
+//        }
         return userRepository.save(u);
     }
 
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
-
+    public List<User> getAllUsers() {return userRepository.findAll();}
 }
