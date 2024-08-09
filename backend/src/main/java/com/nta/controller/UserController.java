@@ -35,8 +35,7 @@ public class UserController {
                 .build();
     }
 
-
-
+//    @PreAuthorize("hasAuthority('CREATE_POST')")
     @GetMapping
     ApiResponse<List<User>> getUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication(); // Lấy thông tin user đang được authen

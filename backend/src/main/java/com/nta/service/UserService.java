@@ -55,7 +55,10 @@ public class UserService {
 //        }
         return userRepository.save(u);
     }
-
+    public User addRole(User u, String roleName) {
+        roleRepository.findById(roleName).ifPresent(u.getRoles()::add);
+        return userRepository.save(u);
+    }
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
