@@ -1,6 +1,7 @@
 package com.nta.service;
 
 import com.nta.constant.PredefinedRole;
+import com.nta.dto.request.CheckAccountRequest;
 import com.nta.dto.request.UserCreationRequest;
 import com.nta.entity.Role;
 import com.nta.entity.User;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -34,25 +36,19 @@ public class UserService {
     private static final String DEFAULT_AVATAR_URL = "https://res.cloudinary.com/dqpo9h5s2/image/upload/v1711860995/rooms/avatar_vuwmxd.jpg";
 
     public User createUser(UserCreationRequest request) {
-        if(userRepository.existsByUsername(request.getUsername())) {
-            throw new AppException(ErrorCode.USERNAME_EXISTED);
-        }
-        if(userRepository.existsByEmail(request.getEmail())) {
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
         User u = userMapper.toUser(request);
         u.setPassword(passwordEncoder.encode(request.getPassword()));
         HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
         u.setRoles(roles);
         //upload avatar to cloudinary
-//        try{
-//            Map cloudinaryResponse = cloudinaryService.upload(request.getFile());
-//            u.setAvatar(cloudinaryResponse.get("secure_url").toString());
-//        } catch (RuntimeException e) {
-//            u.setAvatar(DEFAULT_AVATAR_URL);
-//            log.warn("Cannot upload avatar to cloudinary, use default img url instead");
-//        }
+        try{
+            Map cloudinaryResponse = cloudinaryService.upload(request.getFile());
+            u.setAvatar(cloudinaryResponse.get("secure_url").toString());
+        } catch (RuntimeException e) {
+            u.setAvatar(DEFAULT_AVATAR_URL);
+            log.warn("Cannot upload avatar to cloudinary, use default img url instead");
+        }
         return userRepository.save(u);
     }
     public User addRole(User u, String roleName) {
@@ -63,4 +59,12 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
     public List<User> getAllUsers() {return userRepository.findAll();}
+    public void checkUsernameAndEmail(CheckAccountRequest request) {
+        if(userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USERNAME_EXISTED);
+        }
+        if(userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+    }
 }

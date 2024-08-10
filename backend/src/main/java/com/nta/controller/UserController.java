@@ -1,5 +1,6 @@
 package com.nta.controller;
 
+import com.nta.dto.request.CheckAccountRequest;
 import com.nta.dto.request.UserCreationRequest;
 import com.nta.dto.response.ApiResponse;
 import com.nta.dto.response.UserResponse;
@@ -46,5 +47,11 @@ public class UserController {
         return ApiResponse.<List<User>>builder()
                 .result(userService.getAllUsers())
                 .build();
+    }
+
+    @PostMapping("/check-account")
+    ApiResponse<Void> verifyUsernameAndEmailNotExisted(@ModelAttribute CheckAccountRequest request) {
+        userService.checkUsernameAndEmail(request);
+        return ApiResponse.<Void>builder().build();
     }
 }
