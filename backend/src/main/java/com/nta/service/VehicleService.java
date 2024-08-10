@@ -5,6 +5,7 @@ import com.nta.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -14,5 +15,9 @@ public class VehicleService {
 
     Optional<Vehicle> findById(String id) {
         return vehicleRepository.findById(id);
+    }
+
+    public List<Vehicle> findAll() {
+        return vehicleRepository.findAll();
     }
 }
