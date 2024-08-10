@@ -33,15 +33,18 @@ public class SecurityConfig {
 
   @Autowired
   private CustomJwtDecoder customNimbusJwtDecoder;
-  private final String[] PUBLIC_ENDPOINTS = {
+  private final String[] PUBLIC_POST_ENDPOINTS = {
     "/users","/users/check-account", "/auth/token", "/auth/introspect", "/auth/logout","/roles","/shippers",
           "/sent-otp","/verify-register-otp"
   };
 
+  private final String[] PUBLIC_GET_ENDPOINTS = {"/vehicles"};
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-    httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
+    httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS)
             .permitAll()
+            .requestMatchers(HttpMethod.GET,PUBLIC_GET_ENDPOINTS).permitAll()
             .requestMatchers(HttpMethod.GET, "/users").hasRole(PredefinedRole.ADMIN_ROLE)
             .anyRequest()
             .authenticated());

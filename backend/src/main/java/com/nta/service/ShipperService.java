@@ -36,8 +36,6 @@ public class ShipperService {
 
     @Transactional
     public Shipper create(ShipperCreationRequest request) {
-
-
         Vehicle v = vehicleService.findById(request.getVehicleId())
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_NOT_FOUND));
 
@@ -48,14 +46,12 @@ public class ShipperService {
         shipper.setVehicle(v);
 
         //upload identity photo to cloudinary
-//        try{
-//            Map cloudinaryResponse = cloudinaryService.upload(request.getIdentityFFile());
-//            Map cloudinaryResponse2 = cloudinaryService.upload(request.getIdentityBFile());
-//            shipper.setIdentityF(cloudinaryResponse.get("secure_url").toString());
-//            shipper.setIdentityB(cloudinaryResponse2.get("secure_url").toString());
-//        } catch (RuntimeException e) {
-//            throw new AppException(ErrorCode.CREATE_SHIPPER_FAILED);
-//        }
+        try{
+            Map cloudinaryResponse = cloudinaryService.upload(request.getIdentityFFile());
+            shipper.setIdentityF(cloudinaryResponse.get("secure_url").toString());
+        } catch (RuntimeException e) {
+            throw new AppException(ErrorCode.CREATE_SHIPPER_FAILED);
+        }
 
         return shipperRepositoy.save(shipper);
     }

@@ -8,6 +8,8 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -18,14 +20,12 @@ public class ShipperCreationRequest {
     String firstName;
     String lastName;
     String email;
-    @NotNull(message = "AVATAR_REQUIRED")
-    MultipartFile file;
+    byte[] file;
 
     //shipper
     String vehicleNumber;
 
-    MultipartFile identityFFile;
-    MultipartFile identityBFile;
+    byte[] identityFFile;
 
     //vehicle
     String vehicleId;

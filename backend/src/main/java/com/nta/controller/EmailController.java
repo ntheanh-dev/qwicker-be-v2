@@ -7,6 +7,7 @@ import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,7 +32,7 @@ public class EmailController {
                 .build();
     }
 
-    @PostMapping("/verify-otp")
+    @PostMapping(value = "/verify-register-otp")
     public ApiResponse<Void> verifyOtp(@RequestParam Map<String,String> request) {
         String email = request.get("email");
         String otp = request.get("otp");

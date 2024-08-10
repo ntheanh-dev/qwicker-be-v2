@@ -58,7 +58,7 @@ public class AuthenticationService {
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     boolean authenticate =  passwordEncoder.matches(authenticationRequest.getPassword(), user.getPassword());
     if(!authenticate){
-      throw new AppException(ErrorCode.UNAUTHORIZED);
+      throw new AppException(ErrorCode.UNAUTHENTICATED);
     }
 
     var accessToken = generateToken(user, TokenType.ACCESS_TOKEN);
@@ -126,11 +126,11 @@ public class AuthenticationService {
 
     var verified = signedJWT.verify(verifier);
 
-    if (!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHORIZED);
+    if (!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
     // Check if token is a logouted token (in black list in redis)
     //    if (redisService.isRedisLive() && redisService.hasValue(token, "1")) {
-    //      throw new AppException(ErrorCode.UNAUTHORIZED);
+    //      throw new AppException(ErrorCode.UNAUTHENTICATED);
     //    }
 
   }
