@@ -45,9 +45,12 @@ public class AuthenticationService {
   protected String SIGNER_KEY;
 
   @NonFinal
-  @Value("${spring.security.oauth2.resourceserver.jwt.valid-duration}")
-  protected long VALID_DURATION;
+  @Value("${spring.security.oauth2.resourceserver.jwt.access-token-valid-duration}")
+  protected long ACCESS_TOKEN_VALID_DURATION;
 
+  @NonFinal
+  @Value("${spring.security.oauth2.resourceserver.jwt.refresh-token-valid-duration}")
+  protected long REFRESH_TOKEN_VALID_DURATION;
 
   public AuthenticationResponse authenticated(AuthenticationRequest authenticationRequest)
       throws JOSEException {
@@ -74,8 +77,8 @@ public class AuthenticationService {
     JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
     Date expirationTime =
         TokenType.ACCESS_TOKEN.equals(type)
-            ? new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.MINUTES).toEpochMilli())
-            : new Date(Instant.now().plus(3, ChronoUnit.DAYS).toEpochMilli());
+            ? new Date(Instant.now().plus(ACCESS_TOKEN_VALID_DURATION, ChronoUnit.HOURS).toEpochMilli())
+            : new Date(Instant.now().plus(REFRESH_TOKEN_VALID_DURATION, ChronoUnit.DAYS).toEpochMilli());
     JWTClaimsSet jwtClaimsSet =
         new JWTClaimsSet.Builder()
             .subject(user.getUsername())
