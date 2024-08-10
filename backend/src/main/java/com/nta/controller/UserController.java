@@ -7,15 +7,12 @@ import com.nta.dto.response.UserResponse;
 import com.nta.entity.User;
 import com.nta.mapper.UserMapper;
 import com.nta.service.UserService;
-import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -26,13 +23,12 @@ import java.util.List;
 public class UserController {
     UserService userService;
     UserMapper userMapper;
-    @PostMapping(consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE
-    })
-    ApiResponse<UserResponse> creationUser(@ModelAttribute @Valid UserCreationRequest request) {
-        User u = userService.createUser(request);
+
+    @PostMapping
+    ApiResponse<UserResponse> creationUser(@ModelAttribute UserCreationRequest request) {
+        User newUser = userService.createUser(request);
         return ApiResponse.<UserResponse>builder()
-                .result(userMapper.toUserResponse(u))
+                .result(userMapper.toUserResponse(newUser))
                 .build();
     }
 

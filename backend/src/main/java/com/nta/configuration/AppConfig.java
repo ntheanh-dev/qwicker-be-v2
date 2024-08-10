@@ -29,7 +29,7 @@ public class AppConfig {
     public Cloudinary cloudinary() {
         Cloudinary cloudinary
                 = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", env.getProperty("spring.cloudinary.key"),
+                "cloud_name", env.getProperty("spring.cloudinary.name"),
                 "api_key", env.getProperty("spring.cloudinary.key"),
                 "api_secret", env.getProperty("spring.cloudinary.secret"),
                 "secure", true));

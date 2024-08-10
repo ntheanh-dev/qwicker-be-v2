@@ -34,7 +34,8 @@ public class SecurityConfig {
   @Autowired
   private CustomJwtDecoder customNimbusJwtDecoder;
   private final String[] PUBLIC_ENDPOINTS = {
-    "/users","/users/check-account", "/auth/token", "/auth/introspect", "/auth/logout","/roles","/shippers"
+    "/users","/users/check-account", "/auth/token", "/auth/introspect", "/auth/logout","/roles","/shippers",
+          "/sent-otp","/verify-register-otp"
   };
 
   @Bean
