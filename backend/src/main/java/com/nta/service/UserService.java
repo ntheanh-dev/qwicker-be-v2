@@ -3,6 +3,7 @@ package com.nta.service;
 import com.nta.constant.PredefinedRole;
 import com.nta.dto.request.CheckAccountRequest;
 import com.nta.dto.request.UserCreationRequest;
+import com.nta.dto.response.UserResponse;
 import com.nta.entity.Role;
 import com.nta.entity.User;
 import com.nta.exception.AppException;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.stereotype.Service;
@@ -66,5 +68,13 @@ public class UserService {
         if(userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
+    }
+    public UserResponse getMyInfo() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        return userMapper.toUserResponse(user);
     }
 }

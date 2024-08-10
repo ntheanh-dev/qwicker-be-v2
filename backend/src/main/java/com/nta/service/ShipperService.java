@@ -2,6 +2,7 @@ package com.nta.service;
 
 import com.nta.constant.PredefinedRole;
 import com.nta.dto.request.ShipperCreationRequest;
+import com.nta.dto.response.ShipperResponse;
 import com.nta.entity.Shipper;
 import com.nta.entity.User;
 import com.nta.entity.Vehicle;
@@ -11,9 +12,11 @@ import com.nta.mapper.ShipperMapper;
 import com.nta.mapper.UserMapper;
 import com.nta.repository.RoleRepository;
 import com.nta.repository.ShipperRepositoy;
+import com.nta.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ public class ShipperService {
     ShipperRepositoy shipperRepositoy;
     ShipperMapper shipperMapper;
 
+    UserRepository userRepository;
     UserService userService;
     UserMapper userMapper;
 
@@ -54,5 +58,15 @@ public class ShipperService {
         }
 
         return shipperRepositoy.save(shipper);
+    }
+
+    public ShipperResponse getMyInfo() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Shipper shipper = shipperRepositoy.findByUser(user);
+
+        return shipperMapper.toShipperResponse(shipper);
     }
 }

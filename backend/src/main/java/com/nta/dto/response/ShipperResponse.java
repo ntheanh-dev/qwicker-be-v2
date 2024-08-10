@@ -14,6 +14,6 @@ public class ShipperResponse {
     String identityF;
     String identityB;
     String vehicleNumber;
-    User user;
+    UserResponse user;
     Vehicle vehicle;
 }

@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,14 @@ public class ShipperController {
         ShipperResponse response = shipperMapper.toShipperResponse(shipperService.create(request));
         return ApiResponse.<ShipperResponse>builder()
                 .result(response)
+                .build();
+    }
+
+    @GetMapping("/my-info")
+    @PreAuthorize("hasRole('SHIPPER')")
+    ApiResponse<ShipperResponse> getMyInfo() {
+        return ApiResponse.<ShipperResponse>builder()
+                .result(shipperService.getMyInfo())
                 .build();
     }
 }
