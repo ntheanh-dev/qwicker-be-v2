@@ -12,12 +12,12 @@ public enum ErrorCode {
     AVATAR_REQUIRED(1004,"a avatar file is required", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(1005,"This email has already existed",HttpStatus.CONFLICT),
     USER_NOT_EXISTED(1006,"User not existed",HttpStatus.NOT_FOUND),
-    UNAUTHORIZED(1007,"Unauthorized",HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(1008,"Invalid token",HttpStatus.BAD_REQUEST),
     INCORRECT_PASSWORD(1009,"Invalid password", HttpStatus.BAD_REQUEST),
     ROLE_USER_NOT_FOUND(1010,"ROLE_USER not found",HttpStatus.INTERNAL_SERVER_ERROR),
     ROLE_SHIPPER_NOT_FOUND(1011,"ROLE_SHIPPER not found",HttpStatus.INTERNAL_SERVER_ERROR),
     UNAUTHENTICATED(1012,"unauthenticated", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     //Vehicle
     VEHICLE_NOT_FOUND(1050,"Vehicle not found",HttpStatus.BAD_REQUEST),
     //Redis
