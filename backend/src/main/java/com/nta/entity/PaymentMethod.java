@@ -15,10 +15,11 @@ import java.util.Set;
 public class PaymentMethod {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "payment_method_id",nullable = false)
+    @Column(name = "id",nullable = false)
     String id;
+
+    String name;
 
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "method")
     Set<Payment> payments;
-
 }

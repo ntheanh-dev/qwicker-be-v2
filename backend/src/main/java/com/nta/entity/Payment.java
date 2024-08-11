@@ -24,7 +24,8 @@ public class Payment {
     @JoinColumn(name = "post_id")
     Post post;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
+    @JoinColumn(name = "payment_method_id")
     PaymentMethod method;
 
 }
