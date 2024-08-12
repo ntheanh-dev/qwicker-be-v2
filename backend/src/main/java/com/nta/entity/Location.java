@@ -14,9 +14,9 @@ public class Location {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "location_id",nullable = false)
     String id;
-    String name; //for user or company
-    String phoneNumber;
-    String address;
+    String contact;
+    String formattedAddress;
+    String postalCode;
     BigDecimal latitude;
     BigDecimal longitude;
 }
