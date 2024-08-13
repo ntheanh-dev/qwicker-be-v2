@@ -11,11 +11,10 @@ import java.math.BigDecimal;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LocationCreationRequest {
-    String name; //for user or company
     String contact;
+    String addressLine;
     String formattedAddress;
     String postalCode;
-    String address;
     BigDecimal latitude;
     BigDecimal longitude;
 }

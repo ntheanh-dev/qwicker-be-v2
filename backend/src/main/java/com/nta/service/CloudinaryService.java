@@ -35,4 +35,13 @@ public class CloudinaryService {
             throw new RuntimeException("Image upload fail");
         }
     }
+
+    public String url(byte[] b) {
+        try{
+            Map data = this.cloudinary.uploader().upload(b, ObjectUtils.asMap("resource_type", "auto"));
+            return data.get("secure_url").toString();
+        }catch (IOException io){
+            throw new RuntimeException("Image upload fail");
+        }
+    }
 }

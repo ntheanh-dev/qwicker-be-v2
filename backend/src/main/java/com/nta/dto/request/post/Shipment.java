@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nta.dto.request.LocationCreationRequest;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.DateTimeFormat.ISO;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -14,13 +14,11 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Shipment {
-    int cost;
+    BigDecimal cost;
 
-//    @DateTimeFormat(pattern = "yyyy-M-dd HH:mm", iso = ISO.DATE_TIME)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-M-dd HH:mm")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-M-dd H:m")
     LocalDateTime pickupDatetime;
-    String type;
-
+    String type; // now or latter
     LocationCreationRequest pickupLocation;
     LocationCreationRequest dropLocation;
 }

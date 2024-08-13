@@ -10,7 +10,10 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@Builder
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -20,14 +23,9 @@ public class Payment {
     LocalDateTime paidAt;
     boolean isPosterPay;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    Post post;
-
     @ManyToOne
     @JoinColumn(name = "payment_method_id")
     PaymentMethod method;
-
 }
 
 

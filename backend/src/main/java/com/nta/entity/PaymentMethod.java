@@ -1,5 +1,6 @@
 package com.nta.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,6 +21,7 @@ public class PaymentMethod {
 
     String name;
 
+    @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "method")
     Set<Payment> payments;
 }

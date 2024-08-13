@@ -15,6 +15,7 @@ public class Location {
     @Column(name = "location_id",nullable = false)
     String id;
     String contact;
+    String addressLine;
     String formattedAddress;
     String postalCode;
     BigDecimal latitude;

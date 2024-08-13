@@ -1,5 +1,6 @@
 package com.nta.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -17,7 +18,7 @@ public class Product {
     String image;
     String mass;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_category_id")
     ProductCategory category;
 }

@@ -2,8 +2,7 @@ package com.nta.entity;
 
 import com.nta.enums.PostStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -11,6 +10,9 @@ import java.util.Set;
 @Entity
 @Setter
 @Getter
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Builder
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -18,6 +20,7 @@ public class Post {
     String id;
     String description;
     LocalDateTime postTime;
+    String requestType; // now or latter
 
     @OneToOne
     @JoinColumn(name = "product_id")
@@ -26,12 +29,16 @@ public class Post {
     @OneToOne
     @JoinColumn(name = "pickup_location")
     Location pickupLocation;
-    LocalDateTime pickupTime;
+    LocalDateTime pickupDatetime;
 
     @OneToOne
-    @JoinColumn(name = "delivery_location")
-    Location deliveryLocation;
-    LocalDateTime deliveryTime;
+    @JoinColumn(name = "drop_location")
+    Location dropLocation;
+    LocalDateTime dropDateTime;
+
+    @OneToOne
+    @JoinColumn(name = "payment")
+    Payment payment;
 
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "shipper_id")
@@ -41,9 +48,10 @@ public class Post {
     @JoinColumn(name = "user_id")
     User user;
 
-    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @JoinColumn(name="vehicle_id")
     Vehicle vehicleType;
 
-    @OneToMany(fetch = FetchType.EAGER,mappedBy = "post")
+    @OneToMany(fetch = FetchType.LAZY,mappedBy = "post")
     Set<PostHistory> history;
 }

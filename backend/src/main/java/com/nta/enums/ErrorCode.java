@@ -23,7 +23,13 @@ public enum ErrorCode {
     //Redis
     REDIS_SERVER_NOT_FOUD(1080,"Cannot connect to Redis server",HttpStatus.INTERNAL_SERVER_ERROR),
     //Shipper
-    CREATE_SHIPPER_FAILED(1100,"Cannot create shipper due to failure of upload identify photo",HttpStatus.INTERNAL_SERVER_ERROR)
+    CREATE_SHIPPER_FAILED(1100,"Cannot create shipper due to failure of upload identify photo",HttpStatus.INTERNAL_SERVER_ERROR),
+    //Products and category
+    CATEGORY_NOT_FOUND(1151,"Product category not found",HttpStatus.BAD_REQUEST),
+    //Payment and method
+    PAYMENT_METHOD_NOT_FOUND(1200,"Payment method not found",HttpStatus.BAD_REQUEST),
+    //Post
+    POST_NOT_FOUND(1250,"Post not found",HttpStatus.BAD_REQUEST)
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

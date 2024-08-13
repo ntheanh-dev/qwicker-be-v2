@@ -2,13 +2,14 @@ package com.nta.controller;
 
 import com.nta.dto.request.post.PostCreationRequest;
 import com.nta.dto.response.ApiResponse;
+import com.nta.entity.Post;
+import com.nta.service.PostService;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/posts")
@@ -16,8 +17,19 @@ import java.util.Objects;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PostController {
 
+    PostService postService;
+
     @PostMapping
-    ApiResponse<Void> createPost(@RequestBody PostCreationRequest request) {
-        return ApiResponse.<Void>builder().build();
+    ApiResponse<Post> createPost(@RequestBody PostCreationRequest request) {
+        var response = postService.createPost(request);
+        return ApiResponse.<Post>builder()
+                .result(response)
+                .build();
+    }
+
+    @GetMapping("/{id}")
+    ApiResponse<Post> getPostById(@PathVariable String id) {
+        var response = postService.findById(id);
+        return ApiResponse.<Post>builder().result(response).build();
     }
 }

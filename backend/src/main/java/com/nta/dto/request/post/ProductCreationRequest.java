@@ -9,9 +9,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductCreationRequest {
-
-    int categoryId;
+    String categoryId;
     String file;
-    int mass;
+    String mass;
     int quantity;
 }
