@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +36,8 @@ public class PostService {
     public Post createPost(PostCreationRequest request) {
         //--------------Product-----------------
         Product prod = productMapper.toProduct(request.getProduct());
-        String file = request.getProduct().getFile();
-        byte[] bytes = Base64.getEncoder().encode(file.getBytes());
-        prod.setImage(cloudinaryService.url(bytes));
+        String url = cloudinaryService.url(request.getProduct().getFile());
+        prod.setImage(cloudinaryService.url(url));
         ProductCategory prodCate = productCategoryRepository.findById(request.getProduct().getCategoryId()).orElseThrow(
                 () -> new AppException(ErrorCode.CATEGORY_NOT_FOUND)
         );
