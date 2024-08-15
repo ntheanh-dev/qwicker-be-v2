@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -28,6 +29,11 @@ public class RedisConfig {
         jedisConnectionFactory.setHostName(REDIS_HOST);
         jedisConnectionFactory.setPort(Integer.parseInt(REDIS_PORT));
         return jedisConnectionFactory;
+    }
+
+    @Bean
+    GeoOperations<String, String> geoOperations(RedisTemplate<String,String> template) {
+        return template.opsForGeo();
     }
 
     @Bean
