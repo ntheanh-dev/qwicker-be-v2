@@ -38,7 +38,7 @@ public class SecurityConfig {
           "/sent-otp","/verify-register-otp"
   };
 
-  private final String[] PUBLIC_GET_ENDPOINTS = {"/vehicles","/products/categories","/payment/methods"};
+  private final String[] PUBLIC_GET_ENDPOINTS = {"/vehicles","/products/categories","/payment/methods","/location/duration"};
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {

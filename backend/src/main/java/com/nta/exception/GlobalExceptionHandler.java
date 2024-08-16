@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     // Bắt exception trung trung
-    @ExceptionHandler(Exception.class)
-    ResponseEntity<ApiResponse<Object>> runtimeExceptionHandler(Exception e) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>();
-        apiResponse.setMessage(e.getMessage());
-        apiResponse.setCode(999);
-
-        log.error(e.getMessage());
-        return ResponseEntity.internalServerError().body(apiResponse);
-    }
+//    @ExceptionHandler(Exception.class)
+//    ResponseEntity<ApiResponse<Object>> runtimeExceptionHandler(Exception e) {
+//        ApiResponse<Object> apiResponse = new ApiResponse<>();
+//        apiResponse.setMessage(e.getMessage());
+//        apiResponse.setCode(999);
+//
+//        log.error(e.getMessage());
+//        return ResponseEntity.internalServerError().body(apiResponse);
+//    }
 
     // Exception tự tạo
     @ExceptionHandler(AppException.class)

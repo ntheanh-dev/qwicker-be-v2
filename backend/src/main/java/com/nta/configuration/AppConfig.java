@@ -12,9 +12,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Properties;
 
@@ -64,4 +66,9 @@ public class AppConfig {
         return bean;
     }
 
+    @Bean
+    public WebClient.Builder webClientBuilder(ClientHttpConnector clientHttpConnector) {
+        return WebClient.builder()
+                .clientConnector(clientHttpConnector);
+    }
 }
