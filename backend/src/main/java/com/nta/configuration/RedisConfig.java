@@ -1,11 +1,10 @@
 package com.nta.configuration;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,6 +31,7 @@ public class RedisConfig {
     }
 
     @Bean
+    @Scope("prototype")
     GeoOperations<String, String> geoOperations(RedisTemplate<String,String> template) {
         return template.opsForGeo();
     }

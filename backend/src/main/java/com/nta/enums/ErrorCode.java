@@ -29,7 +29,9 @@ public enum ErrorCode {
     //Payment and method
     PAYMENT_METHOD_NOT_FOUND(1200,"Payment method not found",HttpStatus.BAD_REQUEST),
     //Post
-    POST_NOT_FOUND(1250,"Post not found",HttpStatus.BAD_REQUEST)
+    POST_NOT_FOUND(1250,"Post not found",HttpStatus.BAD_REQUEST),
+    //webclient
+    CAN_NOT_CALL_API(1280,"Can not call api", HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

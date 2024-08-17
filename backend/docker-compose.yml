@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   redis:
-    image: redis
+    image: redis:7.4
     container_name: my-redis-container
     volumes:
       - redis-data:/data

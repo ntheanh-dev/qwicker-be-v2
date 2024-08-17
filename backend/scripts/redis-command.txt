@@ -1,0 +1,4 @@
+-------------GEO OPERATION CLI---------------
+GEOPOS key member // example: GEOPOS gek4ui "1": (nil) if member not found
+
+ZEM key member // example: ZEM gek4ui "1" (delete)

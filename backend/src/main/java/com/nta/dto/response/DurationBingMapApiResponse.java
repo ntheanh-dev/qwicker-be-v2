@@ -1,15 +1,24 @@
 package com.nta.dto.response;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Getter
+@Setter
 public class DurationBingMapApiResponse {
     public String authenticationResultCode;
     public List<ResourceSet> resourceSets;
 
+    @Getter
+    @Setter
     public static class ResourceSet {
         public int estimatedTotal;
         public List<Resource> resources;
     }
 
+    @Getter
+    @Setter
     public static class Resource {
 //        public List<Double> bbox;
         public String distanceUnit;
