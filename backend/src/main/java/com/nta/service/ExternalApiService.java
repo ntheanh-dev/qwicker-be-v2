@@ -30,18 +30,7 @@ public class ExternalApiService {
     @Value("${spring.bingmapkey}")
     private String BING_MAP_KEY;
 
-    public DurationBingMapApiResponse getDurationResponseAsync(Double latitude1, Double longitude1, Double latitude2 , Double longitude2
-    ) {
-        String url = String.format(
-                "https://dev.virtualearth.net/REST/v1/Routes/Driving?o=json&wp.0=%.10f,%.10f&wp.1=%.10f,%.10f&key=%s",
-                latitude1,longitude1,latitude2,longitude2, BING_MAP_KEY);
-        return webClientBuilder.baseUrl(url).build()
-                .get()
-                .uri(url)
-                .retrieve()
-                .bodyToMono(DurationBingMapApiResponse.class)
-                .block();
-    }
+
 
     public int getNearestShipperIndex(Point myPoint,List<Point> points) {
         try {
@@ -89,5 +78,18 @@ public class ExternalApiService {
                 .uri(url)
                 .retrieve()
                 .bodyToMono(DurationBingMapApiResponse.class);
+    }
+
+    public DurationBingMapApiResponse getDurationResponseAsync(Double latitude1, Double longitude1, Double latitude2 , Double longitude2
+    ) {
+        String url = String.format(
+                "https://dev.virtualearth.net/REST/v1/Routes/Driving?o=json&wp.0=%.10f,%.10f&wp.1=%.10f,%.10f&key=%s",
+                latitude1,longitude1,latitude2,longitude2, BING_MAP_KEY);
+        return webClientBuilder.baseUrl(url).build()
+                .get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(DurationBingMapApiResponse.class)
+                .block();
     }
 }

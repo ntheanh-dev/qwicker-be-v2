@@ -10,8 +10,7 @@ import com.nta.exception.AppException;
 import com.nta.enums.ErrorCode;
 import com.nta.mapper.ShipperMapper;
 import com.nta.mapper.UserMapper;
-import com.nta.repository.RoleRepository;
-import com.nta.repository.ShipperRepositoy;
+import com.nta.repository.ShipperRepository;
 import com.nta.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 @RequiredArgsConstructor
 public class ShipperService {
 
-    ShipperRepositoy shipperRepositoy;
+    ShipperRepository shipperRepository;
     ShipperMapper shipperMapper;
 
     UserRepository userRepository;
@@ -57,7 +57,7 @@ public class ShipperService {
             throw new AppException(ErrorCode.CREATE_SHIPPER_FAILED);
         }
 
-        return shipperRepositoy.save(shipper);
+        return shipperRepository.save(shipper);
     }
 
     public ShipperResponse getMyInfo() {
@@ -65,8 +65,13 @@ public class ShipperService {
         String name = context.getAuthentication().getName();
 
         User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        Shipper shipper = shipperRepositoy.findByUser(user);
+        Shipper shipper = shipperRepository.findByUser(user);
 
         return shipperMapper.toShipperResponse(shipper);
+    }
+
+    public Optional<Vehicle> getVehicleByUserId(String userId) {
+        return shipperRepository.findByUserId(userId)
+                .map(Shipper::getVehicle);
     }
 }

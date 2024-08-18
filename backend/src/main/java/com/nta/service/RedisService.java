@@ -1,9 +1,11 @@
 package com.nta.service;
 
+import com.nta.model.ShipperDetailCache;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -64,4 +66,5 @@ public class RedisService {
     public void delete(String key, String field) {
         hashOperations.delete(key,field);
     }
+
 }

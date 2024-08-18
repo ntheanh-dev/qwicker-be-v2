@@ -3,7 +3,7 @@ package com.nta.controller;
 import com.nta.dto.response.DurationBingMapApiResponse;
 import com.nta.dto.response.ApiResponse;
 import com.nta.service.ExternalApiService;
-import com.nta.service.GeoLocationService;
+import com.nta.service.GeoHashService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class LocationController {
     private final ExternalApiService externalApiService;
-    private final GeoLocationService geoLocationService;
+    private final GeoHashService geoLocationService;
 
     @GetMapping("/duration")
     ApiResponse<DurationBingMapApiResponse> getDrivingRoute(

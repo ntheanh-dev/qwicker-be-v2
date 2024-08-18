@@ -1,7 +1,6 @@
 package com.nta.runner;
 
-import com.nta.dto.request.ShipperLocationRequest;
-import com.nta.service.GeoLocationService;
+import com.nta.service.GeoHashService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class LocationRunner implements CommandLineRunner {
-    private final GeoLocationService geoLocationService;
+    private final GeoHashService geoLocationService;
 
     @Override
     public void run(String... args) throws Exception {
