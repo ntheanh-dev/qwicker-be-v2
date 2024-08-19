@@ -18,7 +18,7 @@ public class WsLocationController {
             @Payload LocationMessage locationMessage,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        locationService.addLocation(locationMessage,headerAccessor);
+//        locationService.addLocation(locationMessage,headerAccessor);
         return locationMessage;
     }
 }

@@ -24,6 +24,26 @@ public class LocationService {
     ShipperService shipperService;
     private final UserService userService;
 
+    public void updateLocation(Double oldLatitude, Double oldLongitude,Double newLatitude,Double newLongitude) {
+        var userDetail = authenticationService.getAuthenticatedUserDetail();
+        String oldGeoHash = geoHashService.getGeohash(oldLatitude,oldLongitude);
+        String newGeoHash = geoHashService.getGeohash(newLatitude,newLongitude);
+        //----------Delete previous location-------------
+        redisService.delete(oldGeoHash,userDetail.getId());
+        //----------Add new location---------------------
+        var vehicle = shipperService.getVehicleByUserId(userDetail.getId()).orElseThrow(
+                () -> new AppException(ErrorCode.VEHICLE_NOT_FOUND));
+        redisService.hashSet(newGeoHash, userDetail.getId(),
+                ShipperDetailCache
+                        .builder()
+                        .id(userDetail.getId())
+                        .vehicleType(vehicle.getId())
+                        .ts(LocalDateTime.now())
+                        .latitude(newLatitude)
+                        .longitude(newLongitude)
+        );
+    }
+
     public void addLocation(
             LocationMessage locationMessage, SimpMessageHeaderAccessor headerAccessor
     ) {

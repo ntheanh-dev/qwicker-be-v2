@@ -2,8 +2,10 @@ package com.nta.controller;
 
 import com.nta.dto.response.DurationBingMapApiResponse;
 import com.nta.dto.response.ApiResponse;
+import com.nta.model.LocationMessage;
 import com.nta.service.ExternalApiService;
 import com.nta.service.GeoHashService;
+import com.nta.service.websocker.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class LocationController {
     private final ExternalApiService externalApiService;
     private final GeoHashService geoLocationService;
-
+    private final LocationService locationService;
     @GetMapping("/duration")
     ApiResponse<DurationBingMapApiResponse> getDrivingRoute(
             @RequestParam double lat1,
@@ -34,5 +36,11 @@ public class LocationController {
     ) {
         var shipperId = geoLocationService.findNearestShipperId(latitude,longitude,20);
         return ApiResponse.<String>builder().result(shipperId).build();
+    }
+
+    @PostMapping
+    ApiResponse<Void> addLocation(@RequestParam Double latitude, @RequestParam Double longitude) {
+        locationService.updateLocation(latitude,longitude,latitude,longitude);
+        return ApiResponse.<Void>builder().build();
     }
 }
