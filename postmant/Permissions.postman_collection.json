@@ -1,0 +1,102 @@
+{
+	"info": {
+		"_postman_id": "c969f0f1-e754-4340-ad4f-f8d58e9ad024",
+		"name": "Permissions",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32432118"
+	},
+	"item": [
+		{
+			"name": "create Permission",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"CREATE_POST\",\r\n    \"description\": \"Create a post\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/permissions",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"permissions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get Permissions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkZXZ0ZXJpYS5jb20iLCJzdWIiOiJhZG1pbiIsImV4cCI6MTcxMTg4NjY2NCwiaWF0IjoxNzExODgzMDY0LCJzY29wZSI6IiJ9.8Pfh79dv-QZqlE9pLKIucRF-4fGqDba0S28ZRvtHN8R98vKoCHY89ZRcmhjl-nEA02dbCV59a3IhEIk0QOcWLQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/identity/permissions",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"identity",
+						"permissions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete permission",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkZXZ0ZXJpYS5jb20iLCJzdWIiOiJhZG1pbiIsImV4cCI6MTcxMTgwMDA4MiwiaWF0IjoxNzExNzk2NDgyLCJzY29wZSI6IiJ9.hxJ_MtsDqXJRtZXwVF7jgVFRjHzll2daoaRBwPi8TR3A-ztbCzG247BR6cG4s-QduMEaFuhGdQb8VSYwX7gI6g",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/permissions/CREATE_DATA",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"permissions",
+						"CREATE_DATA"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

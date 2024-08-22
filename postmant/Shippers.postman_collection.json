@@ -1,0 +1,110 @@
+{
+	"info": {
+		"_postman_id": "cb33a0e4-ae5f-455c-bdb3-97bddafac027",
+		"name": "Shippers",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32432118"
+	},
+	"item": [
+		{
+			"name": "Create A Shipper",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "theanh24",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "12345678",
+							"type": "text"
+						},
+						{
+							"key": "firstName",
+							"value": "anh",
+							"type": "text"
+						},
+						{
+							"key": "lastName",
+							"value": "nguyen",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "a@axample.comasdf",
+							"type": "text"
+						},
+						{
+							"key": "file",
+							"type": "file",
+							"src": "postman-cloud:///1eebac41-3441-4790-b218-7fef35e64359"
+						},
+						{
+							"key": "identityFFile",
+							"type": "file",
+							"src": "postman-cloud:///1eebac41-3441-4790-b218-7fef35e64359"
+						},
+						{
+							"key": "identityBFile",
+							"type": "file",
+							"src": "postman-cloud:///1eebac41-3441-4790-b218-7fef35e64359"
+						},
+						{
+							"key": "vehicleId",
+							"value": "2",
+							"type": "text"
+						},
+						{
+							"key": "vehicleNumber",
+							"value": "29A-25642",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/shippers",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"shippers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Shipper Info",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/shippers/my-info",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"shippers",
+						"my-info"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,146 @@
+{
+	"info": {
+		"_postman_id": "435017b9-2c21-4afd-909e-d0a9a2ee8628",
+		"name": "Locations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32432118"
+	},
+	"item": [
+		{
+			"name": "TEST - Get Duration Between Two Point",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/location/duration?lat1=10.904504175576282&long1=106.64990967116417&lat2=10.853204727920584&long2=106.62678389540942",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"location",
+						"duration"
+					],
+					"query": [
+						{
+							"key": "lat1",
+							"value": "10.904504175576282"
+						},
+						{
+							"key": "long1",
+							"value": "106.64990967116417"
+						},
+						{
+							"key": "lat2",
+							"value": "10.853204727920584"
+						},
+						{
+							"key": "long2",
+							"value": "106.62678389540942"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TEST - Get Nearest Location",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/location/nearest?latitude=10.863752677454341&longitude=106.67836621138579",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"location",
+						"nearest"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "10.863752677454341"
+						},
+						{
+							"key": "longitude",
+							"value": "106.67836621138579"
+						},
+						{
+							"key": "latitude",
+							"value": "40.95068101667577",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "29.12719414971017",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TEST - Update location",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "latitude",
+							"value": "10.803594284619432",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "106.58748123297343",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/location",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"location"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,38 @@
+{
+	"info": {
+		"_postman_id": "2b233912-11da-4e16-b515-6f21fbf0c9ea",
+		"name": "Posts",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32432118"
+	},
+	"item": [
+		{
+			"name": "get Post by Id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/posts/036ff9ee-1a88-48d7-9c3f-3136c9eb459b",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"posts",
+						"036ff9ee-1a88-48d7-9c3f-3136c9eb459b"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"info": {
+		"_postman_id": "5fccfd90-8697-46f0-81b4-e13279b46031",
+		"name": "Products and Products Category",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32432118"
+	},
+	"item": [
+		{
+			"name": "Get All Product Category",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/products/categories",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"products",
+						"categories"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

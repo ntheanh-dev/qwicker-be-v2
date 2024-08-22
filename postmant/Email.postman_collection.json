@@ -1,0 +1,74 @@
+{
+	"info": {
+		"_postman_id": "6b12f04b-039a-4a70-8fc4-37d83610aa71",
+		"name": "Email",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32432118"
+	},
+	"item": [
+		{
+			"name": "Sent OTP",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "theanh",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "theanhmgt66@gmail.com",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/sent-otp",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"sent-otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Verify Email",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "otp",
+							"value": "4044",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "theanhmgt66@gmail.com",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/verify-otp",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"verify-otp"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
