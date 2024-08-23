@@ -2,11 +2,13 @@ package com.nta.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nta.component.CustomJwtDecoder;
-import com.nta.service.AuthenticationService;
+import com.nta.component.JwtHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.converter.DefaultContentTypeResolver;
@@ -23,37 +25,42 @@ import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.server.RequestUpgradeStrategy;
+import org.springframework.web.socket.server.standard.TomcatRequestUpgradeStrategy;
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import java.util.List;
 
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)
+@Slf4j
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Value("${frontend.caller.host}")
     private String frontendCallerHost;
 
     private final CustomJwtDecoder customNimbusJwtDecoder;
-
-
-    private final AuthenticationService authenticationService;
-
+    private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
+    public void configureMessageBroker(final MessageBrokerRegistry registry) {
         registry.setApplicationDestinationPrefixes("/app");
         registry.enableSimpleBroker("/topic", "/queue", "/user");
     }
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
+    public void registerStompEndpoints(final StompEndpointRegistry registry) {
+        RequestUpgradeStrategy upgradeStrategy = new TomcatRequestUpgradeStrategy();
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:3000")
-                .withSockJS();
+//                .setHandshakeHandler(new DefaultHandshakeHandler(upgradeStrategy))
+                .addInterceptors(jwtHandshakeInterceptor)
+                .setAllowedOriginPatterns("*");
+//                .withSockJS();
     }
 
     @Override
-    public boolean configureMessageConverters(List<MessageConverter> messageConverters) {
+    public boolean configureMessageConverters(final List<MessageConverter> messageConverters) {
         DefaultContentTypeResolver resolver = new DefaultContentTypeResolver();
         resolver.setDefaultMimeType(MimeTypeUtils.APPLICATION_JSON);
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
@@ -61,35 +68,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         converter.setContentTypeResolver(resolver);
         messageConverters.add(converter);
         return false;
-    }
-
-    @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new ChannelInterceptor() {
-            @SneakyThrows
-            @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor =
-                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                assert accessor != null;
-
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-
-                    String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
-                    assert authorizationHeader != null;
-                    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                        String jwtToken = accessor.getFirstNativeHeader("Authorization");
-
-                        if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
-                            jwtToken = jwtToken.substring(7);
-                            JwtAuthenticationToken authentication =
-                                    new JwtAuthenticationToken(customNimbusJwtDecoder.decode(jwtToken));
-                            accessor.setUser(authentication);
-                        }
-                    }
-                }
-                return message;
-            }
-        });
     }
 }

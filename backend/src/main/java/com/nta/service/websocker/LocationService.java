@@ -41,6 +41,7 @@ public class LocationService {
                         .ts(LocalDateTime.now())
                         .latitude(newLatitude)
                         .longitude(newLongitude)
+                        .build()
         );
     }
 
