@@ -159,29 +159,15 @@ public class AuthenticationService {
         return stringJoiner.toString();
     }
 
-    public AuthenticatedUserDetail getAuthenticatedUserDetail(Principal principal) {
-        Jwt jwt = (Jwt) principal;
+    public AuthenticatedUserDetail getUserDetail(Principal principal) {
+        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
+        Jwt jwt = (Jwt) jwtAuthenticationToken.getCredentials();
         String subject = jwt.getSubject();
         String userId = jwt.getClaim("user_id");
         return AuthenticatedUserDetail.builder()
                 .id(userId)
                 .username(subject)
                 .build();
-    }
-
-    public AuthenticatedUserDetail getAuthenticatedUserDetail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication instanceof JwtAuthenticationToken) {
-            Jwt jwt = (Jwt) authentication.getPrincipal();
-            String subject = jwt.getSubject();  // Example: "sub" claim
-            String userId = jwt.getClaim("user_id");  // Custom claim "user_id"
-            return AuthenticatedUserDetail.builder()
-                    .id(userId)
-                    .username(subject)
-                    .build();
-        }
-        throw new AppException(ErrorCode.AUTHENTICATION_IST_NOT_INSTANCEOF_JWT);
     }
 
     public boolean currentUserIsShipper() {
