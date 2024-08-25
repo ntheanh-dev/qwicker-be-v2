@@ -1,5 +1,6 @@
 package com.nta.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nta.enums.PostStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,6 +22,7 @@ public class Post {
     String description;
     LocalDateTime postTime;
     String requestType; // now or latter
+
 
     @OneToOne
     @JoinColumn(name = "product_id")
@@ -44,11 +46,12 @@ public class Post {
     @JoinColumn(name = "shipper_id")
     Shipper shipper;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     User user;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name="vehicle_id")
     Vehicle vehicleType;
 

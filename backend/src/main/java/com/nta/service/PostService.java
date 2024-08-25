@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,12 +33,13 @@ public class PostService {
     PostRepository postRepository;
     PostHistoryRepository postHistoryRepository;
     PaymentRepository paymentRepository;
+    UserService userService;
     @Transactional
     public Post createPost(PostCreationRequest request) {
         //--------------Product-----------------
         Product prod = productMapper.toProduct(request.getProduct());
         String url = cloudinaryService.url(request.getProduct().getFile());
-        prod.setImage(cloudinaryService.url(url));
+        prod.setImage(url);
         ProductCategory prodCate = productCategoryRepository.findById(request.getProduct().getCategoryId()).orElseThrow(
                 () -> new AppException(ErrorCode.CATEGORY_NOT_FOUND)
         );
@@ -60,6 +62,7 @@ public class PostService {
                 () -> new AppException(ErrorCode.VEHICLE_NOT_FOUND)
         );
         Post post = Post.builder()
+                .user(userService.currentUser())
                 .description(request.getOrder().getDescription())
                 .dropLocation(drop)
                 .pickupLocation(pickup)
@@ -74,6 +77,7 @@ public class PostService {
         PostHistory postHistory = new PostHistory();
         postHistory.setPost(createdPost);
         postHistory.setStatus(PostStatus.PENDING);
+        postHistory.setStatusChangeDate(LocalDateTime.now());
         postHistoryRepository.save(postHistory);
 
         return createdPost;
@@ -81,5 +85,15 @@ public class PostService {
 
     public Post findById(String id) {
         return postRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+    }
+
+    public List<Post> findPostsByUserId() {
+        var user = userService.currentUser();
+        return postRepository.findPostsByUserId(user.getId());
+    }
+
+    public List<Post> getPostsByLatestStatus(PostStatus status) {
+        var user = userService.currentUser();
+        return postRepository.findPostsByLatestStatus(user.getId(),status);
     }
 }
