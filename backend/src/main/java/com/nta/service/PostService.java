@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -34,6 +35,7 @@ public class PostService {
     PostHistoryRepository postHistoryRepository;
     PaymentRepository paymentRepository;
     UserService userService;
+
     @Transactional
     public Post createPost(PostCreationRequest request) {
         //--------------Product-----------------
@@ -71,6 +73,7 @@ public class PostService {
                 .vehicleType(vehicle)
                 .postTime(LocalDateTime.now())
                 .payment(paymentRepository.save(payment))
+                .status(PostStatus.PENDING)
                 .build();
         Post createdPost = postRepository.save(post);
         //---------------Post History----------------
@@ -87,13 +90,24 @@ public class PostService {
         return postRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
     }
 
-    public List<Post> findPostsByUserId() {
-        var user = userService.currentUser();
-        return postRepository.findPostsByUserId(user.getId());
-    }
 
     public List<Post> getPostsByLatestStatus(PostStatus status) {
         var user = userService.currentUser();
-        return postRepository.findPostsByLatestStatus(user.getId(),status);
+        return postRepository.findPostsByLatestStatus(user.getId(), status);
+    }
+
+    public List<Post> getPosts(String statusList) {
+        var user = userService.currentUser();
+        if (statusList == null || statusList.isEmpty()) {
+            return postRepository.findPostsByUserId(user.getId());
+        }
+        List<PostStatus> statusEnumList = Arrays.stream(statusList.split(","))
+                .map(this::convertToEnum)
+                .toList();
+        return postRepository.findPostsByStatus(user.getId(), statusEnumList);
+    }
+
+    private PostStatus convertToEnum(String status) {
+        return PostStatus.valueOf(status.toUpperCase());
     }
 }

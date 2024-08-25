@@ -22,7 +22,8 @@ public class Post {
     String description;
     LocalDateTime postTime;
     String requestType; // now or latter
-
+    @Enumerated(EnumType.STRING)
+    PostStatus status;
 
     @OneToOne
     @JoinColumn(name = "product_id")
