@@ -4,7 +4,6 @@ package com.nta.dto.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,9 +11,10 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LocationCreationRequest {
     String contact;
+    String phoneNumber;
     String addressLine;
     String formattedAddress;
     String postalCode;
-    BigDecimal latitude;
-    BigDecimal longitude;
+    double latitude;
+    double longitude;
 }
