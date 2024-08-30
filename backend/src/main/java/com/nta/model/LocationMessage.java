@@ -1,6 +1,6 @@
 package com.nta.model;
 
-import com.nta.enums.LocationMessageType;
+import com.nta.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +17,7 @@ public class LocationMessage {
 
     private double prevLatitude;
     private double prevLongitude;
-
-    private LocationMessageType messageType;
+    private double timestamp;
+    private MessageType messageType;
 
 }
