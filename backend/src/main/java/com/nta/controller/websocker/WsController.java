@@ -27,12 +27,12 @@ public class WsController {
     private final GeoHashService geoHashService;
     private final SimpMessageSendingOperations simpMessageSendingOperations;
 
-    @MessageMapping("/locations")
+    @MessageMapping("/shipper/location")
     public LocationMessage sendLocationToSpecificGeohash(
             @Payload LocationMessage locationMessage,
             Principal principal
     ) {
-//        locationService.addLocation(locationMessage,principal);
+        locationService.updateLocation(locationMessage,principal);
         return locationMessage;
     }
 

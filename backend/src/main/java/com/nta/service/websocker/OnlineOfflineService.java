@@ -23,7 +23,6 @@ import java.util.*;
 public class OnlineOfflineService {
     private final Set<String> onlineUsers;
     UserRepository userRepository;
-    SimpMessageSendingOperations simpMessageSendingOperations;
     AuthenticationService authenticationService;
     protected Map<String, Set<String>> userSubscribed;
 
