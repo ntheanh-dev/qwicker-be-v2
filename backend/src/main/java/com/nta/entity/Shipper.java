@@ -29,9 +29,6 @@ public class Shipper {
     @JoinColumn(name = "vehicle_id")
     Vehicle vehicle;
 
-    @OneToMany(mappedBy = "shipper",fetch = FetchType.LAZY)
-    Set<Post> posts;
-
     @OneToMany(mappedBy = "rating",fetch = FetchType.EAGER)
     Set<Rating> ratings;
 }

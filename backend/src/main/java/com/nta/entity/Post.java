@@ -43,10 +43,6 @@ public class Post {
     @JoinColumn(name = "payment")
     Payment payment;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
-    @JoinColumn(name = "shipper_id")
-    Shipper shipper;
-
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
