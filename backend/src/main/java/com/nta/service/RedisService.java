@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +57,10 @@ public class RedisService {
 
     public Object hashGet(String key, String field) {
         return hashOperations.get(key,field);
+    }
+
+    public Map<String,Object> hashGetAll(String key) {
+        return hashOperations.entries(key);
     }
 
     public void delete(String key) {

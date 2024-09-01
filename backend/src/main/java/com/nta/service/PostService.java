@@ -3,28 +3,37 @@ package com.nta.service;
 import com.nta.dto.request.post.PostCreationRequest;
 import com.nta.entity.*;
 import com.nta.enums.ErrorCode;
+import com.nta.enums.MessageType;
 import com.nta.enums.PostStatus;
 import com.nta.exception.AppException;
 import com.nta.mapper.LocationMapper;
+import com.nta.mapper.PostMapper;
 import com.nta.mapper.ProductMapper;
+import com.nta.model.websocket.DeliveryRequest;
 import com.nta.repository.*;
+import com.nta.service.websocker.LocationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class PostService {
     ProductMapper productMapper;
     LocationMapper locationMapper;
-
+    SimpMessageSendingOperations simpMessageSendingOperations;
     CloudinaryService cloudinaryService;
     ProductCategoryRepository productCategoryRepository;
     ProductRepository productRepository;
@@ -35,7 +44,8 @@ public class PostService {
     PostHistoryRepository postHistoryRepository;
     PaymentRepository paymentRepository;
     UserService userService;
-
+    LocationService locationService;
+    PostMapper postMapper;
     @Transactional
     public Post createPost(PostCreationRequest request) {
         //--------------Product-----------------
@@ -83,13 +93,14 @@ public class PostService {
         postHistory.setStatusChangeDate(LocalDateTime.now());
         postHistoryRepository.save(postHistory);
 
+        //--------------Find nearest shippers by async method---------
+        pushDeliveryRequestToShipper(createdPost);
         return createdPost;
     }
 
     public Post findById(String id) {
         return postRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
     }
-
 
     public List<Post> getPostsByLatestStatus(PostStatus status) {
         var user = userService.currentUser();
@@ -110,4 +121,27 @@ public class PostService {
     private PostStatus convertToEnum(String status) {
         return PostStatus.valueOf(status.toUpperCase());
     }
+
+    @Async("taskExecutor")
+    public void pushDeliveryRequestToShipper(final String postId) {
+        final Post post = findById(postId);
+        pushDeliveryRequestToShipper(post);
+    }
+
+    @Async("taskExecutor")
+    public void pushDeliveryRequestToShipper(final Post post) {
+        final Set<String> shipperId = locationService.getShippersByGeoHash(
+                post.getPickupLocation().getLatitude(),
+                post.getPickupLocation().getLongitude()
+        );
+        shipperId.forEach(s -> {
+            var body = DeliveryRequest.builder()
+                    .post(postMapper.toPostResponse(post))
+                    .messageType(MessageType.DELIVERY_REQUEST)
+                    .build();
+            simpMessageSendingOperations.convertAndSend("/topic/shipper/" + s, body);
+            log.info("delivery request to shipper: " + s);
+        });
+    }
+
 }
