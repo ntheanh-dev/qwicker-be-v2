@@ -61,13 +61,15 @@ public class ShipperService {
     }
 
     public ShipperResponse getMyInfo() {
+        final Shipper s = getCurrentShipper();
+        return shipperMapper.toShipperResponse(s);
+    }
+
+    public Shipper getCurrentShipper() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
-
         User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        Shipper shipper = shipperRepository.findByUser(user);
-
-        return shipperMapper.toShipperResponse(shipper);
+        return shipperRepository.findByUser(user);
     }
 
     public Optional<Vehicle> getVehicleByUserId(String userId) {

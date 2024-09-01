@@ -7,6 +7,7 @@ import com.nta.service.PostService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -43,6 +44,13 @@ public class PostController {
         }
 
         return ApiResponse.<List<Post>>builder().result(response).build();
+    }
+
+    @PostMapping("/{id}")
+    @PreAuthorize("hasRole('SHIPPER')")
+    ApiResponse<Void> joinPost(@PathVariable String id) {
+        postService.joinPost(id);
+        return ApiResponse.<Void>builder().result(null).build();
     }
 
 }

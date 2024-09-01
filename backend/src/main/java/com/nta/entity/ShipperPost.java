@@ -22,13 +22,11 @@ public class ShipperPost {
     String id;
 
     @ManyToOne
-    @MapsId("id")
-    @JoinColumn(name = "id", nullable = false)
+    @JoinColumn(name = "shipper_id", nullable = false)
     private Shipper shipper;
 
     @ManyToOne
-    @MapsId("id")
-    @JoinColumn(name = "id",nullable = false)
+    @JoinColumn(name = "post_id",nullable = false)
     private Post post;
 
     @Enumerated(EnumType.STRING)

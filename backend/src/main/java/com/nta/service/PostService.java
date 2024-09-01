@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -46,6 +47,9 @@ public class PostService {
     UserService userService;
     LocationService locationService;
     PostMapper postMapper;
+    ShipperPostRepository shipperPostRepository;
+    ShipperService shipperService;
+
     @Transactional
     public Post createPost(PostCreationRequest request) {
         //--------------Product-----------------
@@ -144,4 +148,21 @@ public class PostService {
         });
     }
 
+    public void joinPost(final String postId) {
+        final Post p = postRepository.findById(postId).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        if(p.getStatus() == PostStatus.PENDING) {
+            final Shipper s = shipperService.getCurrentShipper();
+            final Optional<ShipperPost> shipperPost = shipperPostRepository.findByShipperIdAndPostId(s.getId(), postId);
+            if(shipperPost.isPresent()) {
+                throw new AppException(ErrorCode.SHIPPER_POST_EXISTED);
+            } else {
+                ShipperPost newShipperPost = ShipperPost.builder()
+                        .shipper(s)
+                        .joinedAt(LocalDateTime.now())
+                        .post(p)
+                        .build();
+                shipperPostRepository.save(newShipperPost);
+            }
+        }
+    }
 }

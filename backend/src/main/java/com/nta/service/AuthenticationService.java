@@ -159,11 +159,20 @@ public class AuthenticationService {
         return stringJoiner.toString();
     }
 
-    public AuthenticatedUserDetail getUserDetail(Principal principal) {
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
-        Jwt jwt = (Jwt) jwtAuthenticationToken.getCredentials();
-        String subject = jwt.getSubject();
-        String userId = jwt.getClaim("user_id");
+    public String extractClaim(final String claimKey) {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.isAuthenticated()) {
+            final Jwt jwt = (Jwt) authentication.getCredentials();
+            return jwt.getClaim(claimKey);
+        }
+        return null;
+    }
+
+    public AuthenticatedUserDetail getUserDetail(final Principal principal) {
+        final JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
+        final Jwt jwt = (Jwt) jwtAuthenticationToken.getCredentials();
+        final String subject = jwt.getSubject();
+        final String userId = jwt.getClaim("user_id");
         return AuthenticatedUserDetail.builder()
                 .id(userId)
                 .username(subject)
