@@ -5,4 +5,7 @@ public enum MessageType {
     CURRENT_LOCATION,
 
     NOT_FOUND_SHIPPER,
+    DELIVERY_REQUEST,
+    UPDATE_SHIPPER_LOCATION,
+
 }

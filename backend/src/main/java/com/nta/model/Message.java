@@ -1,11 +1,13 @@
 package com.nta.model;
 
 import com.nta.enums.MessageType;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 @Builder
-@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
 public class Message {
-    private MessageType type;
+    private MessageType messageType;
+    private String content;
 }
