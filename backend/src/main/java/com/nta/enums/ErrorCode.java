@@ -36,6 +36,8 @@ public enum ErrorCode {
     POST_NOT_FOUND(1250, "Post not found", HttpStatus.BAD_REQUEST),
     SHIPPER_POST_EXISTED(1251, "ShipperPost existed", HttpStatus.CONFLICT),
     POST_WAS_TAKEN(1252, "Post was taken", HttpStatus.CONFLICT),
+    INVALID_POST_STATUS(1253, "Invalid post status", HttpStatus.BAD_REQUEST),
+    CANNOT_UPDATE_POST_STATUS(1254, "Cannot update post, new post status is not in order", HttpStatus.BAD_REQUEST),
     //webclient
     CAN_NOT_CALL_API(1280, "Can not call api", HttpStatus.INTERNAL_SERVER_ERROR),
     //location

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, String> {
@@ -26,6 +27,8 @@ public interface PostRepository extends JpaRepository<Post, String> {
             "AND p.user.id = :userId"
     )
     List<Post> findPostsByLatestStatus(@Param("userId") String userId,@Param("status") PostStatus status);
+
+    Optional<Post> findPostByIdAndStatus(String postId, PostStatus status);
 
     @Query("SELECT p FROM Post p WHERE p.user.id = :userId AND p.status IN :statusList")
     List<Post> findPostsByStatus(@Param("userId") String userId,@Param("statusList") List<PostStatus> statusList);

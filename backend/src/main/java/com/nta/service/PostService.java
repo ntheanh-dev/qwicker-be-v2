@@ -21,14 +21,12 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -53,48 +51,49 @@ public class PostService {
     ShipperPostRepository shipperPostRepository;
     ShipperService shipperService;
     ShipperMapper shipperMapper;
+
     @Transactional
-    public Post createPost(PostCreationRequest request) {
+    public Post createPost(final PostCreationRequest request) {
         //--------------Product-----------------
-        Product prod = productMapper.toProduct(request.getProduct());
-        String url = cloudinaryService.url(request.getProduct().getFile());
-        prod.setImage(url);
+        final Product prod = productMapper.toProduct(request.getProduct());
+        prod.setImage(cloudinaryService.url(request.getProduct().getFile()));
         ProductCategory prodCate = productCategoryRepository.findById(request.getProduct().getCategoryId()).orElseThrow(
                 () -> new AppException(ErrorCode.CATEGORY_NOT_FOUND)
         );
         prod.setCategory(prodCate);
-        Product createdProd = productRepository.save(prod);
+        final Product createdProd = productRepository.save(prod);
         //--------------Location-----------------
-        Location pickup = locationRepository.save(locationMapper.toLocation(request.getShipment().getPickupLocation()));
-        Location drop = locationRepository.save(locationMapper.toLocation(request.getShipment().getDropLocation()));
+        final Location pickup = locationRepository.save(locationMapper.toLocation(request.getShipment().getPickupLocation()));
+        final Location drop = locationRepository.save(locationMapper.toLocation(request.getShipment().getDropLocation()));
         //-------------Payment-------------------
-        PaymentMethod paymentMethod = paymentMethodRepository.findById(request.getPayment().getMethod()).orElseThrow(
+        final PaymentMethod paymentMethod = paymentMethodRepository.findById(request.getPayment().getMethod()).orElseThrow(
                 () -> new AppException(ErrorCode.PAYMENT_METHOD_NOT_FOUND)
         );
-        Payment payment = Payment.builder()
+        final Payment payment = Payment.builder()
                 .isPosterPay(request.getPayment().isPosterPay())
                 .price(request.getShipment().getCost())
                 .method(paymentMethod)
                 .build();
         //-----------Post--------------
-        Vehicle vehicle = vehicleRepository.findById(request.getOrder().getVehicleId()).orElseThrow(
-                () -> new AppException(ErrorCode.VEHICLE_NOT_FOUND)
-        );
-        Post post = Post.builder()
+        final Post post = Post.builder()
                 .user(userService.currentUser())
                 .description(request.getOrder().getDescription())
                 .dropLocation(drop)
                 .pickupLocation(pickup)
                 .product(createdProd)
                 .requestType(request.getShipment().getType())
-                .vehicleType(vehicle)
+                .vehicleType(vehicleRepository.findById(request.getOrder().getVehicleId()).orElseThrow(
+                        () -> new AppException(ErrorCode.VEHICLE_NOT_FOUND)
+                ))
                 .postTime(LocalDateTime.now())
                 .payment(paymentRepository.save(payment))
-                .status(PostStatus.PENDING)
+                .status(
+                        paymentMethod.getName().equals("Tiền Mặt") ? PostStatus.PENDING : PostStatus.WAITING_PAY
+                )
                 .build();
-        Post createdPost = postRepository.save(post);
+        final Post createdPost = postRepository.save(post);
         //---------------Post History----------------
-        PostHistory postHistory = new PostHistory();
+        final PostHistory postHistory = new PostHistory();
         postHistory.setPost(createdPost);
         postHistory.setStatus(PostStatus.PENDING);
         postHistory.setStatusChangeDate(LocalDateTime.now());
@@ -105,28 +104,74 @@ public class PostService {
         return createdPost;
     }
 
-    public Post findById(String id) {
+    public Post findById(final String id) {
         return postRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
     }
 
-    public List<Post> getPostsByLatestStatus(PostStatus status) {
-        var user = userService.currentUser();
-        return postRepository.findPostsByLatestStatus(user.getId(), status);
-    }
-
-    public List<Post> getPosts(String statusList) {
-        var user = userService.currentUser();
+    public List<Post> getPostsByLatestStatus(final String statusList) {
+        final var user = userService.currentUser();
         if (statusList == null || statusList.isEmpty()) {
             return postRepository.findPostsByUserId(user.getId());
         }
-        List<PostStatus> statusEnumList = Arrays.stream(statusList.split(","))
+        final List<PostStatus> statusEnumList = Arrays.stream(statusList.split(","))
                 .map(this::convertToEnum)
                 .toList();
         return postRepository.findPostsByStatus(user.getId(), statusEnumList);
     }
 
-    private PostStatus convertToEnum(String status) {
-        return PostStatus.valueOf(status.toUpperCase());
+    public Post getPostByStatus(final String status, final String postId) {
+        final PostStatus postStatus = convertToEnum(status);
+        return postRepository.findPostByIdAndStatus(postId, postStatus)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+    }
+
+    public Post updatePostStatus(
+            final String newStatus,
+            final String postId,
+            final String photo,
+            final String description
+    ) {
+        final Post post = postRepository.findById(postId).orElse(null);
+        final PostStatus newPostStatus = convertToEnum(newStatus);
+        assert post != null;
+        final PostStatus oldPostStatus = post.getStatus();
+        if(newPostStatus == oldPostStatus) return post;
+        verifyBeforeChangeStatus(oldPostStatus, newPostStatus); // will throw error if verify fail
+
+        final PostHistory postHistory = PostHistory.builder()
+                .post(post)
+                .status(newPostStatus)
+                .statusChangeDate(LocalDateTime.now())
+                .build();
+        if (photo != null) {
+//            postHistory.setPhoto(cloudinaryService.url(photo));
+        }
+        if (description != null) {
+            postHistory.setDescription(description);
+        }
+        postHistoryRepository.save(postHistory);
+        post.setStatus(newPostStatus);
+        return postRepository.save(post);
+    }
+
+    private void verifyBeforeChangeStatus(final PostStatus oldPostStatus, final PostStatus newPostStatus) {
+        if (newPostStatus == PostStatus.CONFIRM_WITH_CUSTOMER && oldPostStatus != PostStatus.FOUND_SHIPPER) {
+            throw new AppException(ErrorCode.CANNOT_UPDATE_POST_STATUS);
+        }
+        if (newPostStatus == PostStatus.SHIPPED && oldPostStatus != PostStatus.CONFIRM_WITH_CUSTOMER) {
+            throw new AppException(ErrorCode.CANNOT_UPDATE_POST_STATUS);
+        }
+        if (newPostStatus == PostStatus.DELIVERED && oldPostStatus != PostStatus.SHIPPED) {
+            throw new AppException(ErrorCode.CANNOT_UPDATE_POST_STATUS);
+        }
+    }
+
+    private PostStatus convertToEnum(final String status) {
+        try {
+            return PostStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new AppException(ErrorCode.INVALID_POST_STATUS);
+        }
     }
 
     @Async("taskExecutor")
@@ -153,10 +198,10 @@ public class PostService {
 
     public void handleDeliveryRequest(final String postId) {
         final List<ShipperPost> shipperPosts = shipperPostRepository.findAllByPostId(postId);
-        if(shipperPosts.isEmpty()) { // push message to shippers
+        if (shipperPosts.isEmpty()) { // push message to shippers
             pushDeliveryRequestToShipper(postId);
         } else { // find nearest shippers
-            if(shipperPosts.size() == 1) {
+            if (shipperPosts.size() == 1) {
                 final ShipperPost sPost = shipperPosts.getFirst();
                 final Shipper s = sPost.getShipper();
                 final Post post = sPost.getPost();
@@ -171,7 +216,7 @@ public class PostService {
                 sPost.setStatus(ShipperPostStatus.APPROVAL);
                 shipperPostRepository.save(sPost);
 
-                post.setStatus(PostStatus.WAITING_SHIPPER);
+                post.setStatus(PostStatus.FOUND_SHIPPER);
                 postRepository.save(post);
 
                 // notify approval to shipper
@@ -187,12 +232,13 @@ public class PostService {
         }
     }
 
+    @PreAuthorize("hasRole('SHIPPER')")
     public void joinPost(final String postId) {
         final Post p = postRepository.findById(postId).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
-        if(p.getStatus() == PostStatus.PENDING) {
+        if (p.getStatus() == PostStatus.PENDING) {
             final Shipper s = shipperService.getCurrentShipper();
             final Optional<ShipperPost> shipperPost = shipperPostRepository.findByShipperIdAndPostId(s.getId(), postId);
-            if(shipperPost.isPresent()) {
+            if (shipperPost.isPresent()) {
                 throw new AppException(ErrorCode.SHIPPER_POST_EXISTED);
             } else {
                 ShipperPost newShipperPost = ShipperPost.builder()

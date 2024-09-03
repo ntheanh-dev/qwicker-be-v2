@@ -3,14 +3,16 @@ package com.nta.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.nta.enums.PostStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Setter
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class PostHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -22,7 +24,8 @@ public class PostHistory {
     @JoinColumn(name = "post_id")
     Post post;
     LocalDateTime statusChangeDate;
-    String reason;
+    String description;
+    String photo;
 
     @Enumerated(EnumType.STRING)
     PostStatus status;

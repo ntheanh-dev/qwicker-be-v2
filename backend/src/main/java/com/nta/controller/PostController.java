@@ -1,5 +1,6 @@
 package com.nta.controller;
 
+import com.nta.dto.request.UpdatePostStatusRequest;
 import com.nta.dto.request.post.PostCreationRequest;
 import com.nta.dto.response.ApiResponse;
 import com.nta.entity.Post;
@@ -7,8 +8,11 @@ import com.nta.service.PostService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 
@@ -18,6 +22,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PostController {
 
+    private static final Logger log = LoggerFactory.getLogger(PostController.class);
     PostService postService;
 
     @PostMapping
@@ -29,16 +34,34 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    ApiResponse<Post> getPostById(@PathVariable String id) {
-        var response = postService.findById(id);
+    ApiResponse<Post> getPost(
+            @RequestParam(value = "status", required = false) String status,
+            @PathVariable String id
+    ) {
+        Post response;
+        if (status != null) {
+            response = postService.getPostByStatus(status, id);
+        } else {
+            response = postService.findById(id);
+        }
+        return ApiResponse.<Post>builder().result(response).build();
+    }
+
+    @PostMapping("/{id}/update")
+    ApiResponse<Post> updatePostStatus(
+            @PathVariable String id,
+            @RequestBody UpdatePostStatusRequest request
+    ) {
+        log.info("status: {}", request.getStatus());
+        Post response = postService.updatePostStatus(request.getStatus(), id, request.getPhoto(), request.getDescription());
         return ApiResponse.<Post>builder().result(response).build();
     }
 
     @GetMapping
-    ApiResponse<List<Post>> getAllPosts(@RequestParam(value = "status",required = false) String statusList) {
+    ApiResponse<List<Post>> getAllPosts(@RequestParam(value = "status", required = false) String statusList) {
         List<Post> response = null;
         try {
-            response = postService.getPosts(statusList);
+            response = postService.getPostsByLatestStatus(statusList);
         } catch (IllegalArgumentException e) {
             response = List.of();
         }
@@ -47,7 +70,6 @@ public class PostController {
     }
 
     @PostMapping("/{id}")
-    @PreAuthorize("hasRole('SHIPPER')")
     ApiResponse<Void> joinPost(@PathVariable String id) {
         postService.joinPost(id);
         return ApiResponse.<Void>builder().result(null).build();

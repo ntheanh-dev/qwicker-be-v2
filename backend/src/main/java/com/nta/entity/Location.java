@@ -1,6 +1,7 @@
 package com.nta.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +16,7 @@ public class Location {
     @Column(name = "location_id",nullable = false)
     String id;
     String contact;
+    @NotNull
     String phoneNumber;
     String addressLine;
     String formattedAddress;
