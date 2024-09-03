@@ -30,8 +30,6 @@ public class ExternalApiService {
     @Value("${spring.bingmapkey}")
     private String BING_MAP_KEY;
 
-
-
     public int getNearestShipperIndex(Point myPoint,List<Point> points) {
         try {
             // Chờ cho CompletableFuture hoàn thành và lấy dữ liệu
@@ -92,4 +90,5 @@ public class ExternalApiService {
                 .bodyToMono(DurationBingMapApiResponse.class)
                 .block();
     }
+
 }

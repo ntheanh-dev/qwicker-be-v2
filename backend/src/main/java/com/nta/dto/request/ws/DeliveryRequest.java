@@ -1,7 +1,6 @@
-package com.nta.model.websocket;
+package com.nta.dto.request.ws;
 
 import com.nta.dto.response.PostResponse;
-import com.nta.entity.Post;
 import com.nta.enums.MessageType;
 import lombok.Builder;
 import lombok.Data;

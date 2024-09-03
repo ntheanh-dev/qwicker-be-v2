@@ -3,7 +3,6 @@ package com.nta.controller.websocker;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nta.dto.request.UpdateShipperLocationRequest;
-import com.nta.entity.Post;
 import com.nta.enums.MessageType;
 import com.nta.model.Message;
 import com.nta.service.GeoHashService;
@@ -67,7 +66,7 @@ public class WsController {
     ) {
         if(message.getMessageType() != null) {
             if(message.getMessageType().equals(MessageType.DELIVERY_REQUEST)) {
-                postService.pushDeliveryRequestToShipper(postId);
+                postService.handleDeliveryRequest(postId);
             }
         }
 //        Location location = request.getPost().getPickupLocation();

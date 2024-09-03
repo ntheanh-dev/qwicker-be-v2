@@ -1,15 +1,18 @@
 package com.nta.service;
 
 import com.nta.dto.request.post.PostCreationRequest;
+import com.nta.dto.response.ws.FoundShipperResponse;
 import com.nta.entity.*;
 import com.nta.enums.ErrorCode;
 import com.nta.enums.MessageType;
 import com.nta.enums.PostStatus;
+import com.nta.enums.ShipperPostStatus;
 import com.nta.exception.AppException;
 import com.nta.mapper.LocationMapper;
 import com.nta.mapper.PostMapper;
 import com.nta.mapper.ProductMapper;
-import com.nta.model.websocket.DeliveryRequest;
+import com.nta.dto.request.ws.DeliveryRequest;
+import com.nta.mapper.ShipperMapper;
 import com.nta.repository.*;
 import com.nta.service.websocker.LocationService;
 import lombok.AccessLevel;
@@ -49,7 +52,7 @@ public class PostService {
     PostMapper postMapper;
     ShipperPostRepository shipperPostRepository;
     ShipperService shipperService;
-
+    ShipperMapper shipperMapper;
     @Transactional
     public Post createPost(PostCreationRequest request) {
         //--------------Product-----------------
@@ -148,6 +151,42 @@ public class PostService {
         });
     }
 
+    public void handleDeliveryRequest(final String postId) {
+        final List<ShipperPost> shipperPosts = shipperPostRepository.findAllByPostId(postId);
+        if(shipperPosts.isEmpty()) { // push message to shippers
+            pushDeliveryRequestToShipper(postId);
+        } else { // find nearest shippers
+            if(shipperPosts.size() == 1) {
+                final ShipperPost sPost = shipperPosts.getFirst();
+                final Shipper s = sPost.getShipper();
+                final Post post = sPost.getPost();
+                // notify found shipper to user
+                simpMessageSendingOperations.convertAndSend("/topic/post/" + postId,
+                        FoundShipperResponse.builder()
+                                .shipper(shipperMapper.toShipperResponse(s))
+                                .messageType(MessageType.FOUND_SHIPPER)
+                                .build()
+                );
+                // update data in db
+                sPost.setStatus(ShipperPostStatus.APPROVAL);
+                shipperPostRepository.save(sPost);
+
+                post.setStatus(PostStatus.WAITING_SHIPPER);
+                postRepository.save(post);
+
+                // notify approval to shipper
+                simpMessageSendingOperations.convertAndSend("/topic/shipper/" + s.getId(),
+                        DeliveryRequest.builder()
+                                .post(postMapper.toPostResponse(post))
+                                .messageType(MessageType.APPROVED_SHIPPER)
+                                .build()
+                );
+            } else {
+                ////
+            }
+        }
+    }
+
     public void joinPost(final String postId) {
         final Post p = postRepository.findById(postId).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
         if(p.getStatus() == PostStatus.PENDING) {
@@ -159,10 +198,14 @@ public class PostService {
                 ShipperPost newShipperPost = ShipperPost.builder()
                         .shipper(s)
                         .joinedAt(LocalDateTime.now())
+                        .status(ShipperPostStatus.JOINED)
                         .post(p)
                         .build();
                 shipperPostRepository.save(newShipperPost);
             }
+        } else {
+            throw new AppException(ErrorCode.POST_WAS_TAKEN);
         }
     }
+
 }

@@ -35,8 +35,11 @@ public enum ErrorCode {
     //Post
     POST_NOT_FOUND(1250, "Post not found", HttpStatus.BAD_REQUEST),
     SHIPPER_POST_EXISTED(1251, "ShipperPost existed", HttpStatus.CONFLICT),
+    POST_WAS_TAKEN(1252, "Post was taken", HttpStatus.CONFLICT),
     //webclient
-    CAN_NOT_CALL_API(1280, "Can not call api", HttpStatus.INTERNAL_SERVER_ERROR);
+    CAN_NOT_CALL_API(1280, "Can not call api", HttpStatus.INTERNAL_SERVER_ERROR),
+    //location
+    INVALID_LOCATION_DATA(1300,"INVALID_LOCATION_DATA", HttpStatus.BAD_REQUEST);
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;
