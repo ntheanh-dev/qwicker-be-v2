@@ -28,6 +28,7 @@ public enum ErrorCode {
     CREATE_SHIPPER_FAILED(1100, "Cannot create shipper due to failure of upload identify photo",
             HttpStatus.INTERNAL_SERVER_ERROR),
     CANNOT_FIND_SHIPPER_IN_REDIS(1101, "Cannot find shipper in redis", HttpStatus.INTERNAL_SERVER_ERROR),
+    SHIPPER_NOT_FOUND(1102, "Shipper not found", HttpStatus.NOT_FOUND),
     //Products and category
     CATEGORY_NOT_FOUND(1151, "Product category not found", HttpStatus.BAD_REQUEST),
     //Payment and method

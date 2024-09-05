@@ -39,8 +39,8 @@ public class ShipperService {
 
 
     @Transactional
-    public Shipper create(ShipperCreationRequest request) {
-        Vehicle v = vehicleService.findById(request.getVehicleId())
+    public Shipper create(final ShipperCreationRequest request) {
+        final Vehicle v = vehicleService.findById(request.getVehicleId())
                 .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_NOT_FOUND));
 
         User u = userService.createUser(userMapper.toUserCreationRequest(request));
@@ -65,14 +65,18 @@ public class ShipperService {
         return shipperMapper.toShipperResponse(s);
     }
 
+    public Shipper findById(final String id) {
+        return shipperRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.SHIPPER_NOT_FOUND));
+    }
+
     public Shipper getCurrentShipper() {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-        User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        final var context = SecurityContextHolder.getContext();
+        final String name = context.getAuthentication().getName();
+        final User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         return shipperRepository.findByUser(user);
     }
 
-    public Optional<Vehicle> getVehicleByUserId(String userId) {
+    public Optional<Vehicle> getVehicleByUserId(final String userId) {
         return shipperRepository.findByUserId(userId)
                 .map(Shipper::getVehicle);
     }

@@ -1,15 +1,15 @@
 package com.nta.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Builder
 public class Rating {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
