@@ -39,47 +39,4 @@ public class WsController {
         }
     }
 
-//    @MessageMapping("/postfind-shipper")
-//    public void findShipper(
-//            @Payload FindShipper request,
-//            Principal principal
-//    ) {
-//        Location location = request.getPost().getPickupLocation();
-//        try {
-//            geoHashService.findNearestShipperId(location.getLatitude(),
-//                    location.getLongitude(), request.getKm());
-//        } catch (AppException ex) {
-//            if (ex.getErrorCode().equals(ErrorCode.CANNOT_FIND_SHIPPER_IN_REDIS)) {
-//                log.info("Sent message to /topic/post/{}", request.getPost().getId());
-//                simpMessageSendingOperations.convertAndSend("/topic/post/" + request.getPost().getId(),
-//                        Message.builder().type(MessageType.NOT_FOUND_SHIPPER).build());
-//            }
-//        }
-//
-//    }
-
-    @MessageMapping("/post/{postId}")
-    public void post(
-            @Payload Message message,
-            Principal principal,
-            @DestinationVariable("postId") String postId
-    ) {
-        if(message.getMessageType() != null) {
-            if(message.getMessageType().equals(MessageType.DELIVERY_REQUEST)) {
-                postService.handleDeliveryRequest(postId);
-            }
-        }
-//        Location location = request.getPost().getPickupLocation();
-//        try {
-//            geoHashService.findNearestShipperId(location.getLatitude(),
-//                    location.getLongitude(), request.getKm());
-//        } catch (AppException ex) {
-//            if (ex.getErrorCode().equals(ErrorCode.CANNOT_FIND_SHIPPER_IN_REDIS)) {
-//                log.info("Sent message to /topic/post/{}", request.getPost().getId());
-//                simpMessageSendingOperations.convertAndSend("/topic/post/" + request.getPost().getId(),
-//                        Message.builder().messageType(MessageType.NOT_FOUND_SHIPPER).build());
-//            }
-//        }
-    }
-
 }

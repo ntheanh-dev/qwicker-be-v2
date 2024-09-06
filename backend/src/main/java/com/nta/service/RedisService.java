@@ -36,7 +36,7 @@ public class RedisService {
     }
 
     public boolean hasValue(String key, String value) {
-        return redisTemplate.hasKey(key) && value.equals(this.getKey(key));
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key)) && value.equals(this.getKey(key));
     }
 
     public Map<String,Object> getField(String key) {
@@ -69,6 +69,14 @@ public class RedisService {
 
     public void delete(String key, String field) {
         hashOperations.delete(key,field);
+    }
+
+    public boolean checkKeyFieldValueExists(String key, String field, Object value) {
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            Object currentValue = hashOperations.get(key, field);
+            return value.equals(currentValue);
+        }
+        return false;
     }
 
 }

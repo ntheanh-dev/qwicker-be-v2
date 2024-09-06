@@ -35,14 +35,14 @@ public class LocationController {
                 .build();
     }
 
-    @GetMapping("/nearest")
-    ApiResponse<String> findNearestShipper(
-            @RequestParam double latitude,
-            @RequestParam double longitude
-    ) {
-        var shipperId = geoLocationService.findNearestShipperId(latitude, longitude, 20);
-        return ApiResponse.<String>builder().result(shipperId).build();
-    }
+//    @GetMapping("/nearest")
+//    ApiResponse<String> findNearestShipper(
+//            @RequestParam double latitude,
+//            @RequestParam double longitude
+//    ) {
+//        var shipperId = geoLocationService.findNearestShipperId(latitude, longitude, 20);
+//        return ApiResponse.<String>builder().result(shipperId).build();
+//    }
 
 //    @GetMapping("/distance")
 //    ApiResponse<DistanceResponse> getDistanceResponse(

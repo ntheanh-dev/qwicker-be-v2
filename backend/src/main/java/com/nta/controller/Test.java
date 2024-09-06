@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.*;
 public class Test {
     private final PostService postService;
 
-    @GetMapping("/push-delivery-request/{id}")
-    public void pushDeliveryRequest(@PathVariable String id) {
-        postService.pushDeliveryRequestToShipper(id);
-    }
-    @GetMapping("/get-delivery-request/{id}")
-    public void getDeliveryRequest(@RequestParam String postId) {
-        postService.handleDeliveryRequest(postId);
-    }
+//    @GetMapping("/push-delivery-request/{id}")
+//    public void pushDeliveryRequest(@PathVariable String id) {
+//        postService.pushDeliveryRequestToShipper(id);
+//    }
+//    @GetMapping("/get-delivery-request/{id}")
+//    public void getDeliveryRequest(@RequestParam String postId) {
+//        postService.handleFoundShipper(postId);
+//    }
 }
