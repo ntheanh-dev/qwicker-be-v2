@@ -1,5 +1,6 @@
 package com.nta.service;
 
+import ch.hsr.geohash.BoundingBox;
 import ch.hsr.geohash.GeoHash;
 import com.nta.constant.RedisKey;
 import com.nta.enums.ErrorCode;
@@ -31,8 +32,12 @@ public class GeoHashService {
       final double latitude, final double longitude) {
     final String geoHash = getGeohash(latitude, longitude);
     final Map<String, Object> shippersInGeoHash = redisService.getField(geoHash);
-
-    if (shippersInGeoHash != null || !shippersInGeoHash.isEmpty()) {
+    log.info("Getting shippers in geohash: {}", geoHash);
+    if (!shippersInGeoHash.keySet().isEmpty()) {
+      for (final Map.Entry<String, Object> entry : shippersInGeoHash.entrySet()) {
+        final String key = entry.getKey();
+        log.info("Found shipper: {}", key);
+      }
       return shippersInGeoHash;
     }
     // try to find shipper in larger space
@@ -40,8 +45,9 @@ public class GeoHashService {
     log.info("---Cannot find shipper in {}", geoHash + ", try to find in larger space");
     findNeighbors(geoHash)
         .forEach(
-            neighBorHahs -> {
-              result.putAll(redisService.getField(neighBorHahs));
+            neighBorHash -> {
+              log.info("Getting shippers in neighBorHash geohash: {}", neighBorHash);
+              result.putAll(redisService.getField(neighBorHash));
             });
     return result;
   }
@@ -100,21 +106,17 @@ public class GeoHashService {
     return response.getContent().get(nearestShipperIndexByDuration).getContent().getName();
   }
 
-  public String getGeohash(double latitude, double longitude) {
-    GeoHash geoHash = GeoHash.withCharacterPrecision(latitude, longitude, geohashPrecision);
+  public String getGeohash(final double latitude,final double longitude) {
+    final GeoHash geoHash = GeoHash.withCharacterPrecision(latitude, longitude, geohashPrecision);
     return geoHash.toBase32();
   }
 
-  public List<String> findNeighbors(String geohash) {
+  public List<String> findNeighbors(final String geohashStr) {
     // Tạo một đối tượng GeoHash từ chuỗi geohash
-    GeoHash geoHash = GeoHash.fromGeohashString(geohash);
-
+    final GeoHash geoHash = GeoHash.fromGeohashString(geohashStr);
+    final List<String> result = new ArrayList<>();
     // Lấy các geohash lân cận
-    GeoHash north = geoHash.getNorthernNeighbour();
-    GeoHash south = geoHash.getSouthernNeighbour();
-    GeoHash east = geoHash.getEasternNeighbour();
-    GeoHash west = geoHash.getWesternNeighbour();
-
-    return List.of(north.toBase32(), south.toBase32(), east.toBase32(), west.toBase32());
+    Arrays.stream(geoHash.getAdjacent()).toList().forEach(g -> result.add(g.toBase32()));
+    return result;
   }
 }
