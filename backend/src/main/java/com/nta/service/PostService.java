@@ -173,6 +173,11 @@ public class PostService {
       postHistory.setDescription(description);
     }
     postHistoryRepository.save(postHistory);
+    if(newPostStatus.equals(PostStatus.SHIPPED)) {
+      post.setPickupDatetime(LocalDateTime.now());
+    } else if(newPostStatus.equals(PostStatus.DELIVERED)) {
+      post.setDropDateTime(LocalDateTime.now());
+    }
     post.setStatus(newPostStatus);
     return postRepository.save(post);
   }
