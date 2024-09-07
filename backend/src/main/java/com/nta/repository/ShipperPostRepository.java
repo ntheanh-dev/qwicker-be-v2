@@ -19,4 +19,7 @@ public interface ShipperPostRepository extends JpaRepository<ShipperPost, String
 
     @Query("SELECT COUNT(p) > 0 FROM ShipperPost p WHERE p.post.id = :postId")
     boolean existsByPostId(@Param("postId") String postId);
+
+    @Query("SELECT COUNT(p) FROM ShipperPost p WHERE p.post.id = :postId")
+    long countByPostId(@Param("postId") String postId);
 }

@@ -31,8 +31,8 @@ public class GeoHashService {
   public Map<String, Object> getShipperDetailCacheByGeoHash(
       final double latitude, final double longitude) {
     final String geoHash = getGeohash(latitude, longitude);
-    final Map<String, Object> shippersInGeoHash = redisService.getField(geoHash);
     log.info("Getting shippers in geohash: {}", geoHash);
+    final Map<String, Object> shippersInGeoHash = redisService.getField(geoHash);
     if (!shippersInGeoHash.keySet().isEmpty()) {
       for (final Map.Entry<String, Object> entry : shippersInGeoHash.entrySet()) {
         final String key = entry.getKey();

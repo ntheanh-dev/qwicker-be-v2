@@ -76,6 +76,10 @@ public class ShipperService {
         return shipperRepository.findByUser(user);
     }
 
+    public String findShipperIdByUserId(String userId) {
+        return shipperRepository.findShipperIdByUserId(userId);
+    }
+
     public Optional<Vehicle> getVehicleByUserId(final String userId) {
         return shipperRepository.findByUserId(userId)
                 .map(Shipper::getVehicle);

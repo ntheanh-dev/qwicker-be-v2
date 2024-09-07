@@ -15,4 +15,8 @@ public class ShipperPostService {
     public List<ShipperPost> findAllByPostId(String postId) {
         return shipperPostRepository.findAllByPostId(postId);
     }
+
+    public long countByPostId(String postId) {
+        return shipperPostRepository.countByPostId(postId);
+    }
 }

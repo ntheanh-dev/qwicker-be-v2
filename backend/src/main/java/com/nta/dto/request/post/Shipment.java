@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class Shipment {
     BigDecimal cost;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-M-dd H:m")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-M-d H:m")
     LocalDateTime pickupDatetime;
     String type; // now or latter
     LocationCreationRequest pickupLocation;
