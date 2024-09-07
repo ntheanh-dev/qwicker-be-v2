@@ -9,8 +9,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RatingCreationRequest {
-    String postId;
-    String shipperId;
-    int rating;
+    double rating;
     String feedback;
 }

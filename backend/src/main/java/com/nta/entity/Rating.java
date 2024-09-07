@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Setter
 @Getter
@@ -15,8 +17,9 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "rating_id",nullable = false)
     String id;
-    int rating;
+    double rating;
     String feedback;
+    LocalDateTime createdAt;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     User user;

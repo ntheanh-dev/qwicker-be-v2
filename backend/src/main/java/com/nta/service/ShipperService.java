@@ -6,6 +6,7 @@ import com.nta.dto.response.ShipperResponse;
 import com.nta.entity.Shipper;
 import com.nta.entity.User;
 import com.nta.entity.Vehicle;
+import com.nta.enums.ShipperPostStatus;
 import com.nta.exception.AppException;
 import com.nta.enums.ErrorCode;
 import com.nta.mapper.ShipperMapper;
@@ -83,5 +84,9 @@ public class ShipperService {
     public Optional<Vehicle> getVehicleByUserId(final String userId) {
         return shipperRepository.findByUserId(userId)
                 .map(Shipper::getVehicle);
+    }
+
+    public Shipper getWinShipperByPostId(final String postId) {
+        return shipperRepository.getWinShipperByPostId(postId, ShipperPostStatus.APPROVAL);
     }
 }
