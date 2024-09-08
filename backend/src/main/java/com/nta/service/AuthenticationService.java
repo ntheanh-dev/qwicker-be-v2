@@ -179,6 +179,16 @@ public class AuthenticationService {
                 .build();
     }
 
+    public AuthenticatedUserDetail getUserDetail() {
+        final Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        final String subject = jwt.getSubject();
+        final String userId = jwt.getClaim("user_id");
+        return AuthenticatedUserDetail.builder()
+                .id(userId)
+                .username(subject)
+                .build();
+    }
+
     public boolean currentUserIsShipper() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.isAuthenticated() &&

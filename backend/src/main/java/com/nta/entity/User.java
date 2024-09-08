@@ -1,5 +1,7 @@
 package com.nta.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +30,7 @@ public class User {
     String email;
     String avatar;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
     Set<Post> posts;
 

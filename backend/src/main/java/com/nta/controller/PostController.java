@@ -6,6 +6,7 @@ import com.nta.dto.request.post.PostCreationRequest;
 import com.nta.dto.response.ApiResponse;
 import com.nta.dto.response.NumShipperJoinedResponse;
 import com.nta.dto.response.RatingResponse;
+import com.nta.dto.response.ShipperResponse;
 import com.nta.entity.Post;
 import com.nta.service.PostService;
 import com.nta.service.RatingService;
@@ -15,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -69,6 +69,13 @@ public class PostController {
   @GetMapping("/{id}/rating")
   ApiResponse<RatingResponse> getRating(@PathVariable String id) {
     return ApiResponse.<RatingResponse>builder().result(ratingService.getRating(id)).build();
+  }
+
+  @GetMapping("/{id}/winner")
+  ApiResponse<ShipperResponse> getWinner(@PathVariable String id) {
+    return ApiResponse.<ShipperResponse>builder()
+        .result(shipperPostService.findWinnerByPostId(id))
+        .build();
   }
 
   @GetMapping("/{id}/num-shipper-joined")

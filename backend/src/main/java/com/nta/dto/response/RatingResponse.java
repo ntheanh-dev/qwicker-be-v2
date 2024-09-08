@@ -14,4 +14,5 @@ public class RatingResponse {
     double rating;
     String feedback;
     LocalDateTime createdAt;
+    UserResponse user;
 }
