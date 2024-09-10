@@ -52,7 +52,6 @@ public class PostService {
   PostHistoryRepository postHistoryRepository;
   PaymentRepository paymentRepository;
   UserService userService;
-  LocationService locationService;
   PostMapper postMapper;
   ShipperPostRepository shipperPostRepository;
   ShipperService shipperService;
@@ -84,17 +83,11 @@ public class PostService {
             locationMapper.toLocation(request.getShipment().getPickupLocation()));
     final Location drop =
         locationRepository.save(locationMapper.toLocation(request.getShipment().getDropLocation()));
-    // -------------Payment-------------------
+    // -------------Payment method-------------------
     final PaymentMethod paymentMethod =
         paymentMethodRepository
             .findById(request.getPayment().getMethod())
             .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_METHOD_NOT_FOUND));
-    final Payment payment =
-        Payment.builder()
-            .isPosterPay(request.getPayment().isPosterPay())
-            .price(request.getShipment().getCost())
-            .method(paymentMethod)
-            .build();
     // -----------Post--------------
     final Post post =
         Post.builder()
@@ -109,13 +102,21 @@ public class PostService {
                     .findById(request.getOrder().getVehicleId())
                     .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_NOT_FOUND)))
             .postTime(LocalDateTime.now())
-            .payment(paymentRepository.save(payment))
             .status(
                 paymentMethod.getName().equals("Tiền Mặt")
                     ? PostStatus.PENDING
                     : PostStatus.WAITING_PAY)
             .build();
     final Post createdPost = postRepository.save(post);
+    //----------------Payment--------------------
+    final Payment payment =
+            Payment.builder()
+                    .isPosterPay(request.getPayment().isPosterPay())
+                    .price(request.getShipment().getCost())
+                    .method(paymentMethod)
+                    .post(createdPost)
+                    .build();
+    paymentRepository.save(payment);
     // ---------------Post History----------------
     final PostHistory postHistory = new PostHistory();
     postHistory.setPost(createdPost);

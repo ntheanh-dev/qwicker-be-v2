@@ -39,10 +39,6 @@ public class Post {
     Location dropLocation;
     LocalDateTime dropDateTime;
 
-    @OneToOne
-    @JoinColumn(name = "payment")
-    Payment payment;
-
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")

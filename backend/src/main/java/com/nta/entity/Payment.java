@@ -1,5 +1,6 @@
 package com.nta.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +23,11 @@ public class Payment {
     BigDecimal price;
     LocalDateTime paidAt;
     boolean isPosterPay;
+
+    @JsonIgnore
+    @OneToOne
+    @JoinColumn(name = "post_id")
+    Post post;
 
     @ManyToOne
     @JoinColumn(name = "payment_method_id")
