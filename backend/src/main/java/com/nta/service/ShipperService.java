@@ -123,6 +123,14 @@ public class ShipperService {
       results =
           shipperRepository.findHourlyIncome(
               shipper.getId(), request.getStartDate(), request.getEndDate());
+    } else if (type.equals(StatisticIncomeType.DAILY)) {
+      results =
+          shipperRepository.findDailyIncome(
+              shipper.getId(), request.getStartDate(), request.getEndDate());
+    } else if (type.equals(StatisticIncomeType.MONTHLY)) {
+      results =
+          shipperRepository.findMonthlyIncome(
+              shipper.getId(), request.getStartDate(), request.getEndDate());
     }
     assert results != null;
     for (Object[] result : results) {
@@ -134,12 +142,18 @@ public class ShipperService {
 
   private StatisticIncomeResponse toStatisticIncomeResponse(
       final Object[] result, final StatisticIncomeType type) {
-
+    final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:00:00");
+    LocalDateTime dateTime = null;
+    if (type.equals(StatisticIncomeType.HOURLY)) {
+      dateTime = LocalDateTime.parse(result[0].toString(), formatter);
+    } else if (type.equals(StatisticIncomeType.DAILY)) {
+      dateTime = LocalDateTime.parse(result[0].toString() + " 00:00:00", formatter);
+    } else if (type.equals(StatisticIncomeType.MONTHLY)) {
+      dateTime = LocalDateTime.parse(result[0].toString() + "-01 00:00:00", formatter);
+    }
     return StatisticIncomeResponse.builder()
         .type(type)
-        .dateTime(
-            LocalDateTime.parse(
-                result[0].toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:00:00")))
+        .dateTime(dateTime)
         .totalPayments((Long) result[1])
         .totalRevenue((BigDecimal) result[2])
         .cashRevenue((BigDecimal) result[3])
