@@ -23,7 +23,7 @@ public class Rating {
     String feedback;
     LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     User user;
 
@@ -34,6 +34,6 @@ public class Rating {
 
     @JsonBackReference
     @JoinColumn(name = "post_id")
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     Post post;
 }

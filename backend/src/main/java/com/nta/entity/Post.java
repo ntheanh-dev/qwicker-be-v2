@@ -1,5 +1,6 @@
 package com.nta.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nta.enums.PostStatus;
 import jakarta.persistence.*;
@@ -50,4 +51,8 @@ public class Post {
 
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "post")
     Set<PostHistory> history;
+
+    @OneToOne
+    @JoinColumn(name = "payment")
+    Payment payment;
 }

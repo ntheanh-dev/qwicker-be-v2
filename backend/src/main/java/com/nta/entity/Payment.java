@@ -1,5 +1,6 @@
 package com.nta.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,6 +26,7 @@ public class Payment {
     boolean isPosterPay;
 
     @JsonIgnore
+    @JsonBackReference
     @OneToOne
     @JoinColumn(name = "post_id")
     Post post;

@@ -88,6 +88,12 @@ public class PostService {
         paymentMethodRepository
             .findById(request.getPayment().getMethod())
             .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_METHOD_NOT_FOUND));
+    final Payment payment =
+        Payment.builder()
+            .isPosterPay(request.getPayment().isPosterPay())
+            .price(request.getShipment().getCost())
+            .method(paymentMethod)
+            .build();
     // -----------Post--------------
     final Post post =
         Post.builder()
@@ -97,6 +103,7 @@ public class PostService {
             .pickupLocation(pickup)
             .product(createdProd)
             .requestType(request.getShipment().getType())
+            .payment(paymentRepository.save(payment))
             .vehicleType(
                 vehicleRepository
                     .findById(request.getOrder().getVehicleId())
@@ -108,15 +115,6 @@ public class PostService {
                     : PostStatus.WAITING_PAY)
             .build();
     final Post createdPost = postRepository.save(post);
-    //----------------Payment--------------------
-    final Payment payment =
-            Payment.builder()
-                    .isPosterPay(request.getPayment().isPosterPay())
-                    .price(request.getShipment().getCost())
-                    .method(paymentMethod)
-                    .post(createdPost)
-                    .build();
-    paymentRepository.save(payment);
     // ---------------Post History----------------
     final PostHistory postHistory = new PostHistory();
     postHistory.setPost(createdPost);
@@ -174,9 +172,9 @@ public class PostService {
       postHistory.setDescription(description);
     }
     postHistoryRepository.save(postHistory);
-    if(newPostStatus.equals(PostStatus.SHIPPED)) {
+    if (newPostStatus.equals(PostStatus.SHIPPED)) {
       post.setPickupDatetime(LocalDateTime.now());
-    } else if(newPostStatus.equals(PostStatus.DELIVERED)) {
+    } else if (newPostStatus.equals(PostStatus.DELIVERED)) {
       post.setDropDateTime(LocalDateTime.now());
     }
     post.setStatus(newPostStatus);
@@ -206,11 +204,12 @@ public class PostService {
   }
 
   @Async("taskExecutor")
-  protected void handleFoundShippers(final Post post) {
+  protected void selectShipperToShip(final Post post) {
     final List<ShipperPost> shipperPosts = shipperPostRepository.findAllByPostId(post.getId());
-    final ShipperPost sPost = shipperPosts.getFirst();
+    ShipperPost sPost = null;
     Shipper s = null;
-    if (shipperPosts.size() == 1) {
+    if (shipperPosts.size() == 1) { // only one shipper joined
+      sPost = shipperPosts.getFirst();
       s = sPost.getShipper();
     } else { // find nearest shipper
       List<String> shipperIds = shipperPosts.stream().map(ShipperPost::getId).toList();
@@ -222,30 +221,33 @@ public class PostService {
               post.getPickupLocation().getLongitude(),
               999);
       s = shipperService.findById(shipperId);
+      sPost = shipperPostRepository.findByPostIdAndShipperId(post.getId(), shipperId);
     }
-    // update data in db
-    postHistoryRepository.save(PostHistory.builder()
-            .status(PostStatus.FOUND_SHIPPER)
-            .post(post)
-            .statusChangeDate(LocalDateTime.now())
-            .build());
 
-    sPost.setStatus(ShipperPostStatus.APPROVAL);
-    shipperPostRepository.save(sPost);
-
-    post.setStatus(PostStatus.FOUND_SHIPPER);
-    final Post updatePost = postRepository.save(post);
-
+    log.info("Shipper {} was approval to take {} post", s.getId(), post.getId());
     // notify found shipper to user, and joined shippers
-    simpMessageSendingOperations.convertAndSend(
-            "/topic/post/" + post.getId(),
-            FoundShipperResponse.builder()
-                    .shipper(shipperMapper.toShipperResponse(s))
-                    .post(postMapper.toPostResponse(updatePost))
-                    .messageType(MessageType.FOUND_SHIPPER)
-                    .build());
+    try {
+      post.setStatus(PostStatus.FOUND_SHIPPER);
+      simpMessageSendingOperations.convertAndSend(
+          "/topic/post/" + post.getId(),
+          FoundShipperResponse.builder()
+              .shipper(shipperMapper.toShipperResponse(s))
+              .post(postMapper.toPostResponse(postRepository.save(post)))
+              .messageType(MessageType.FOUND_SHIPPER)
+              .build());
 
-    log.info("Found shipper: {}, for post: {}", s.getId(), post);
+      // update data in db
+      postHistoryRepository.save(
+          PostHistory.builder()
+              .status(PostStatus.FOUND_SHIPPER)
+              .post(post)
+              .statusChangeDate(LocalDateTime.now())
+              .build());
+      sPost.setStatus(ShipperPostStatus.APPROVAL);
+      shipperPostRepository.save(sPost);
+    } catch (Exception e) {
+      log.error(e.getMessage());
+    }
     // remove SHIPPER_RECEIVED_MSG on redis
     redisService.delete(RedisKey.SHIPPER_RECEIVED_MSG, post.getId());
   }
@@ -274,19 +276,19 @@ public class PostService {
           .forEach(
               shipperId -> {
                 if (isValidShipperToPushMsg(shipperId, post)) {
-                  var body =
+                  simpMessageSendingOperations.convertAndSend(
+                      "/topic/shipper/" + shipperId,
                       DeliveryRequest.builder()
                           .post(postMapper.toPostResponse(post))
                           .messageType(MessageType.DELIVERY_REQUEST)
-                          .build();
-                  simpMessageSendingOperations.convertAndSend("/topic/shipper/" + shipperId, body);
-                  log.info("Push request to shipper: {}", shipperId);
+                          .build());
+                  log.info("Push delivery request to shipper: {}", shipperId);
                   // Lưu lại những shipper da nhan msg
                   redisService.hashSet(RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
                 }
               });
     } else { // da qua 15s va co shipper join
-      handleFoundShippers(post);
+      selectShipperToShip(post);
       stopScheduledTask(post.getId());
     }
   }
@@ -341,51 +343,53 @@ public class PostService {
                 .post(p)
                 .build();
         shipperPostRepository.save(newShipperPost);
-        //-------Update num joined shipper
+        // -------Update num joined shipper
         simpMessageSendingOperations.convertAndSend(
             "/topic/post/" + postId,
-            Message.builder().content(
-                    String.valueOf(shipperPostService.countByPostId(postId))
-            ).messageType(MessageType.NUM_SHIPPER_JOINED).build());
+            Message.builder()
+                .content(String.valueOf(shipperPostService.countByPostId(postId)))
+                .messageType(MessageType.NUM_SHIPPER_JOINED)
+                .build());
       }
     } else {
       throw new AppException(ErrorCode.POST_WAS_TAKEN);
     }
   }
 
-  //NOTE: for websocket
+  // NOTE: for websocket
   public void joinPost(final String postId, final String shipperId) {
     final Post p =
-            postRepository
-                    .findById(postId)
-                    .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        postRepository
+            .findById(postId)
+            .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
     if (p.getStatus() == PostStatus.PENDING) {
       final Shipper s = shipperService.findById(shipperId);
       final Optional<ShipperPost> shipperPost =
-              shipperPostRepository.findByShipperIdAndPostId(s.getId(), postId);
+          shipperPostRepository.findByShipperIdAndPostId(s.getId(), postId);
       if (shipperPost.isPresent()) {
         throw new AppException(ErrorCode.SHIPPER_POST_EXISTED);
       } else {
         ShipperPost newShipperPost =
-                ShipperPost.builder()
-                        .shipper(s)
-                        .joinedAt(LocalDateTime.now())
-                        .status(ShipperPostStatus.JOINED)
-                        .post(p)
-                        .build();
+            ShipperPost.builder()
+                .shipper(s)
+                .joinedAt(LocalDateTime.now())
+                .status(ShipperPostStatus.JOINED)
+                .post(p)
+                .build();
         shipperPostRepository.save(newShipperPost);
-        //-------Update num joined shipper
+        // -------Update num joined shipper
         simpMessageSendingOperations.convertAndSend(
-                "/topic/post/" + postId,
-                Message.builder().content(
-                        String.valueOf(shipperPostService.countByPostId(postId))
-                ).messageType(MessageType.NUM_SHIPPER_JOINED).build());
-        log.info("Shipper: {}, joined post: {}",shipperId,postId);
+            "/topic/post/" + postId,
+            Message.builder()
+                .content(String.valueOf(shipperPostService.countByPostId(postId)))
+                .messageType(MessageType.NUM_SHIPPER_JOINED)
+                .build());
+        log.info("Shipper: {}, joined post: {}", shipperId, postId);
       }
     } else {
       simpMessageSendingOperations.convertAndSend(
-              "/topic/post/" + postId,
-              Message.builder().messageType(MessageType.POST_WAS_TAKEN).build());
+          "/topic/post/" + postId,
+          Message.builder().messageType(MessageType.POST_WAS_TAKEN).build());
     }
   }
 

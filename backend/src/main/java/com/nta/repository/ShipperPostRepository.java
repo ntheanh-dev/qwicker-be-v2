@@ -42,4 +42,6 @@ public interface ShipperPostRepository extends JpaRepository<ShipperPost, String
       @Param("postId") String postId,
       @Param("userId") String userId,
       @Param("status") ShipperPostStatus status);
+
+  ShipperPost findByPostIdAndShipperId(String postId, String shipperId);
 }
