@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,19 @@ public class LocationService {
   GeoHashService geoHashService;
   RedisService redisService;
   ShipperService shipperService;
+
+  public ShipperDetailCache getCurrentShipperLocation(final String shipperId) {
+    String currentGeoHash = redisService.getKey(shipperId);
+    final Map<String, Object> shippersInGeoHash =
+        redisService.getField(currentGeoHash); // string as shipper and object as shipperdetailcache
+    for (final Map.Entry<String, Object> entry : shippersInGeoHash.entrySet()) {
+      final String key = entry.getKey();
+      if (key.equals(shipperId)) {
+        return (ShipperDetailCache) entry.getValue();
+      }
+    }
+    return null;
+  }
 
   public void updateLocation(
       final UpdateShipperLocationRequest locationMessage, final Principal p) {
@@ -45,6 +59,7 @@ public class LocationService {
               .orElseThrow(() -> new AppException(ErrorCode.VEHICLE_NOT_FOUND));
       // --------Update Location-------------------
       if (redisService.isRedisLive()) {
+        // ------Location-----------
         redisService.hashSet(
             newGeoHash,
             locationMessage.getShipperId(),
@@ -55,6 +70,8 @@ public class LocationService {
                 .latitude(locationMessage.getLatitude())
                 .longitude(locationMessage.getLongitude())
                 .build());
+        // ------Shipper-----------
+        redisService.set(locationMessage.getShipperId(), newGeoHash);
       } else {
         log.warn("Redis server is offline, cannot update shipper location");
       }

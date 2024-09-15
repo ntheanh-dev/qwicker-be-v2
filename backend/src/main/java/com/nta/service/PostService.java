@@ -3,6 +3,7 @@ package com.nta.service;
 import com.nta.constant.RedisKey;
 import com.nta.dto.request.post.PostCreationRequest;
 import com.nta.dto.response.ws.FoundShipperResponse;
+import com.nta.dto.response.ws.ShipperLocationResponse;
 import com.nta.entity.*;
 import com.nta.enums.ErrorCode;
 import com.nta.enums.MessageType;
@@ -15,6 +16,7 @@ import com.nta.mapper.ProductMapper;
 import com.nta.dto.request.ws.DeliveryRequest;
 import com.nta.mapper.ShipperMapper;
 import com.nta.model.Message;
+import com.nta.model.ShipperDetailCache;
 import com.nta.repository.*;
 import com.nta.service.websocker.LocationService;
 import com.nta.service.websocker.OnlineOfflineService;
@@ -24,8 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +56,6 @@ public class PostService {
   ShipperPostRepository shipperPostRepository;
   ShipperService shipperService;
   ShipperMapper shipperMapper;
-
   OnlineOfflineService onlineOfflineService;
 
   ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
@@ -65,6 +64,7 @@ public class PostService {
 
   private final GeoHashService geoHashService;
   private final ShipperPostService shipperPostService;
+  private final LocationService locationService;
 
   @Transactional
   public Post createPost(final PostCreationRequest request) {
@@ -121,7 +121,8 @@ public class PostService {
     postHistory.setStatus(PostStatus.PENDING);
     postHistory.setStatusChangeDate(LocalDateTime.now());
     postHistoryRepository.save(postHistory);
-
+    payment.setPost(createdPost);
+    paymentRepository.save(payment);
     // --------------Find nearest shippers by async method---------
     pushDeliveryRequestToShipper(createdPost);
     return createdPost;
@@ -178,6 +179,14 @@ public class PostService {
       post.setDropDateTime(LocalDateTime.now());
     }
     post.setStatus(newPostStatus);
+
+    simpMessageSendingOperations.convertAndSend(
+        "/topic/post/" + postId,
+        Message.builder()
+            .content(newPostStatus.name())
+            .messageType(MessageType.UPDATE_POST_STATUS)
+            .build());
+
     return postRepository.save(post);
   }
 
@@ -203,11 +212,10 @@ public class PostService {
     }
   }
 
-  @Async("taskExecutor")
-  protected void selectShipperToShip(final Post post) {
+  public void selectShipperToShip(final Post post) {
     final List<ShipperPost> shipperPosts = shipperPostRepository.findAllByPostId(post.getId());
-    ShipperPost sPost = null;
-    Shipper s = null;
+    ShipperPost sPost;
+    Shipper s;
     if (shipperPosts.size() == 1) { // only one shipper joined
       sPost = shipperPosts.getFirst();
       s = sPost.getShipper();
@@ -225,8 +233,8 @@ public class PostService {
     }
 
     log.info("Shipper {} was approval to take {} post", s.getId(), post.getId());
-    // notify found shipper to user, and joined shippers
     try {
+      // notify found shipper to user, and joined shippers
       post.setStatus(PostStatus.FOUND_SHIPPER);
       simpMessageSendingOperations.convertAndSend(
           "/topic/post/" + post.getId(),
@@ -235,7 +243,16 @@ public class PostService {
               .post(postMapper.toPostResponse(postRepository.save(post)))
               .messageType(MessageType.FOUND_SHIPPER)
               .build());
-
+      // ----------------Find shipper location in redis---------------
+      final ShipperDetailCache shipperDetailCache =
+          locationService.getCurrentShipperLocation(s.getId());
+      simpMessageSendingOperations.convertAndSend(
+          "/topic/post/" + post.getId(),
+          ShipperLocationResponse.builder()
+              .latitude(shipperDetailCache.getLatitude())
+              .longitude(shipperDetailCache.getLongitude())
+              .messageType(MessageType.SHIPPER_LOCATION)
+              .build());
       // update data in db
       postHistoryRepository.save(
           PostHistory.builder()
@@ -270,21 +287,25 @@ public class PostService {
     if (isValidPostToPushMsg(post)) { // Chua co shipper join post
       log.info("Processing post {}", post.getId());
       geoHashService
-          .getShipperDetailCacheByGeoHash(
+          .getShippersDetailCacheByGeoHash(
               post.getPickupLocation().getLatitude(), post.getPickupLocation().getLongitude())
           .keySet()
           .forEach(
               shipperId -> {
                 if (isValidShipperToPushMsg(shipperId, post)) {
-                  simpMessageSendingOperations.convertAndSend(
-                      "/topic/shipper/" + shipperId,
-                      DeliveryRequest.builder()
-                          .post(postMapper.toPostResponse(post))
-                          .messageType(MessageType.DELIVERY_REQUEST)
-                          .build());
-                  log.info("Push delivery request to shipper: {}", shipperId);
-                  // Lưu lại những shipper da nhan msg
-                  redisService.hashSet(RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
+                  try {
+                    log.info("Pushing delivery request to shipper: {}", shipperId);
+                    simpMessageSendingOperations.convertAndSend(
+                        "/topic/shipper/" + shipperId,
+                        DeliveryRequest.builder()
+                            .post(postMapper.toPostResponse(post))
+                            .messageType(MessageType.DELIVERY_REQUEST)
+                            .build());
+                    // Lưu lại những shipper da nhan msg
+                    redisService.hashSet(RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
+                  } catch (Exception e) {
+                    log.error(e.getMessage());
+                  }
                 }
               });
     } else { // da qua 15s va co shipper join
@@ -318,41 +339,6 @@ public class PostService {
     if (future != null) {
       future.cancel(true);
       scheduledTasks.remove(postId);
-      System.out.println("Tác vụ đã bị dừng cho Post: " + postId);
-    }
-  }
-
-  @PreAuthorize("hasRole('SHIPPER')")
-  public void joinPost(final String postId) { // for API
-    final Post p =
-        postRepository
-            .findById(postId)
-            .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
-    if (p.getStatus() == PostStatus.PENDING) {
-      final Shipper s = shipperService.getCurrentShipper();
-      final Optional<ShipperPost> shipperPost =
-          shipperPostRepository.findByShipperIdAndPostId(s.getId(), postId);
-      if (shipperPost.isPresent()) {
-        throw new AppException(ErrorCode.SHIPPER_POST_EXISTED);
-      } else {
-        ShipperPost newShipperPost =
-            ShipperPost.builder()
-                .shipper(s)
-                .joinedAt(LocalDateTime.now())
-                .status(ShipperPostStatus.JOINED)
-                .post(p)
-                .build();
-        shipperPostRepository.save(newShipperPost);
-        // -------Update num joined shipper
-        simpMessageSendingOperations.convertAndSend(
-            "/topic/post/" + postId,
-            Message.builder()
-                .content(String.valueOf(shipperPostService.countByPostId(postId)))
-                .messageType(MessageType.NUM_SHIPPER_JOINED)
-                .build());
-      }
-    } else {
-      throw new AppException(ErrorCode.POST_WAS_TAKEN);
     }
   }
 
@@ -398,5 +384,29 @@ public class PostService {
   public void destroy() {
     scheduler.shutdown();
     scheduledTasks.forEach((postId, future) -> future.cancel(true));
+  }
+
+  // NOTE: for api test only
+  public void pushShipperLocationToUser(final String postId) {
+    // Lên lịch tác vụ để chạy xử lý cho Post này
+    Shipper s = shipperService.getCurrentShipper();
+    final ShipperDetailCache shipperDetailCache =
+        locationService.getCurrentShipperLocation(s.getId());
+    ScheduledFuture<?> future =
+        scheduler.scheduleAtFixedRate(
+            () -> {
+              simpMessageSendingOperations.convertAndSend(
+                  "/topic/post/" + postId,
+                  ShipperLocationResponse.builder()
+                      .latitude(shipperDetailCache.getLatitude())
+                      .longitude(shipperDetailCache.getLongitude())
+                      .messageType(MessageType.SHIPPER_LOCATION)
+                      .build());
+              log.info("Pushing shipper location to user: {}", postId);
+            },
+            0,
+            5,
+            TimeUnit.SECONDS);
+    scheduledTasks.put("TEST", future);
   }
 }

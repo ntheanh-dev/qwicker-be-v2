@@ -4,7 +4,9 @@ import com.nta.dto.request.ShipperCreationRequest;
 import com.nta.dto.response.ApiResponse;
 import com.nta.dto.response.ShipperResponse;
 import com.nta.mapper.ShipperMapper;
+import com.nta.model.ShipperDetailCache;
 import com.nta.service.ShipperService;
+import com.nta.service.websocker.LocationService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 public class ShipperController {
     ShipperService shipperService;
     ShipperMapper shipperMapper;
+    private final LocationService locationService;
+
     @PostMapping
     ApiResponse<ShipperResponse> create(@ModelAttribute @Valid ShipperCreationRequest request) {
         ShipperResponse response = shipperMapper.toShipperResponse(shipperService.create(request));
@@ -32,6 +36,13 @@ public class ShipperController {
     ApiResponse<ShipperResponse> getMyInfo() {
         return ApiResponse.<ShipperResponse>builder()
                 .result(shipperService.getMyInfo())
+                .build();
+    }
+
+    @GetMapping("/{id}/current-location")
+    ApiResponse<ShipperDetailCache> getCurrentLocation(@PathVariable String id) {
+        return ApiResponse.<ShipperDetailCache>builder()
+                .result(locationService.getCurrentShipperLocation(id))
                 .build();
     }
 }

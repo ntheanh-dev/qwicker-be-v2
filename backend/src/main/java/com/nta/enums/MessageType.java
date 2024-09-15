@@ -2,7 +2,8 @@ package com.nta.enums;
 
 public enum MessageType {
     REQUEST_DELIVERY,
-    CURRENT_LOCATION,
+    SHIPPER_LOCATION,
+    UPDATE_POST_STATUS,
 
     NOT_FOUND_SHIPPER,
     DELIVERY_REQUEST,

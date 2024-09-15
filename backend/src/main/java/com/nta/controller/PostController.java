@@ -8,14 +8,11 @@ import com.nta.dto.response.NumShipperJoinedResponse;
 import com.nta.dto.response.RatingResponse;
 import com.nta.dto.response.ShipperResponse;
 import com.nta.entity.Post;
-import com.nta.service.PostService;
-import com.nta.service.RatingService;
-import com.nta.service.ShipperPostService;
+import com.nta.service.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,11 +22,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PostController {
-
-  private static final Logger log = LoggerFactory.getLogger(PostController.class);
   PostService postService;
   ShipperPostService shipperPostService;
   RatingService ratingService;
+  ShipperService shipperService;
 
   @PostMapping
   ApiResponse<Post> createPost(@RequestBody PostCreationRequest request) {
@@ -50,6 +46,7 @@ public class PostController {
   }
 
   @PostMapping("/{id}/update")
+  @PreAuthorize("hasRole('SHIPPER')")
   ApiResponse<Post> updatePostStatus(
       @PathVariable String id, @RequestBody UpdatePostStatusRequest request) {
     Post response =
@@ -88,7 +85,7 @@ public class PostController {
   @GetMapping
   ApiResponse<List<Post>> getAllPosts(
       @RequestParam(value = "status", required = false) String statusList) {
-    List<Post> response = null;
+    List<Post> response;
     try {
       response = postService.getPostsByLatestStatus(statusList);
     } catch (IllegalArgumentException e) {
@@ -100,7 +97,13 @@ public class PostController {
 
   @PostMapping("/{id}")
   ApiResponse<Void> joinPost(@PathVariable String id) {
-    postService.joinPost(id);
+    postService.joinPost(id, shipperService.getCurrentShipper().getId());
+    return ApiResponse.<Void>builder().result(null).build();
+  }
+
+  @PostMapping("/{id}/select-shipper")
+  ApiResponse<Void> selectShipper(@PathVariable String id) {
+    postService.selectShipperToShip(postService.findById(id));
     return ApiResponse.<Void>builder().result(null).build();
   }
 }

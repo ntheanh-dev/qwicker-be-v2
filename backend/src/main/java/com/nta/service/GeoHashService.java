@@ -1,6 +1,5 @@
 package com.nta.service;
 
-import ch.hsr.geohash.BoundingBox;
 import ch.hsr.geohash.GeoHash;
 import com.nta.constant.RedisKey;
 import com.nta.enums.ErrorCode;
@@ -28,7 +27,7 @@ public class GeoHashService {
   private int geohashPrecision; // in second
 
   // Object o day la ShipperDetailCache
-  public Map<String, Object> getShipperDetailCacheByGeoHash(
+  public Map<String, Object> getShippersDetailCacheByGeoHash(
       final double latitude, final double longitude) {
     final String geoHash = getGeohash(latitude, longitude);
     log.info("Getting shippers in geohash: {}", geoHash);
@@ -57,7 +56,7 @@ public class GeoHashService {
       final String keyMember,
       final Double latitude,
       final Double longitude) {
-    getShipperDetailCacheByGeoHash(latitude, longitude)
+    getShippersDetailCacheByGeoHash(latitude, longitude)
         .values()
         .forEach(
             s -> {
