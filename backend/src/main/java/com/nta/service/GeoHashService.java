@@ -26,17 +26,13 @@ public class GeoHashService {
   @Value("${spring.location.geohashPrecision}")
   private int geohashPrecision; // in second
 
-  // Object o day la ShipperDetailCache
+  // Object o day la ShipperDetailCache and key is shipperId
   public Map<String, Object> getShippersDetailCacheByGeoHash(
       final double latitude, final double longitude) {
     final String geoHash = getGeohash(latitude, longitude);
     log.info("Getting shippers in geohash: {}", geoHash);
     final Map<String, Object> shippersInGeoHash = redisService.getField(geoHash);
     if (!shippersInGeoHash.keySet().isEmpty()) {
-      for (final Map.Entry<String, Object> entry : shippersInGeoHash.entrySet()) {
-        final String key = entry.getKey();
-        log.info("Found shipper: {}", key);
-      }
       return shippersInGeoHash;
     }
     // try to find shipper in larger space

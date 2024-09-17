@@ -2,6 +2,7 @@ package com.nta.service;
 
 import com.nta.constant.RedisKey;
 import com.nta.dto.request.post.PostCreationRequest;
+import com.nta.dto.response.PaymentResponse;
 import com.nta.dto.response.ws.FoundShipperResponse;
 import com.nta.dto.response.ws.ShipperLocationResponse;
 import com.nta.entity.*;
@@ -10,11 +11,8 @@ import com.nta.enums.MessageType;
 import com.nta.enums.PostStatus;
 import com.nta.enums.ShipperPostStatus;
 import com.nta.exception.AppException;
-import com.nta.mapper.LocationMapper;
-import com.nta.mapper.PostMapper;
-import com.nta.mapper.ProductMapper;
+import com.nta.mapper.*;
 import com.nta.dto.request.ws.DeliveryRequest;
-import com.nta.mapper.ShipperMapper;
 import com.nta.model.Message;
 import com.nta.model.ShipperDetailCache;
 import com.nta.repository.*;
@@ -26,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +57,7 @@ public class PostService {
   ShipperService shipperService;
   ShipperMapper shipperMapper;
   OnlineOfflineService onlineOfflineService;
-
+  PaymentMapper paymentMapper;
   ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
   Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
   RedisService redisService;
@@ -134,7 +134,7 @@ public class PostService {
         .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
   }
 
-  public List<Post> getPostsByLatestStatus(final String statusList) {
+  public List<Post> getPostsByStatusList(final String statusList) {
     final var user = userService.currentUser();
     if (statusList == null || statusList.isEmpty()) {
       return postRepository.findPostsByUserId(user.getId());
@@ -142,6 +142,14 @@ public class PostService {
     final List<PostStatus> statusEnumList =
         Arrays.stream(statusList.split(",")).map(this::convertToEnum).toList();
     return postRepository.findPostsByStatus(user.getId(), statusEnumList);
+  }
+
+  public List<Post> getShipperPostsByStatusList(final String statusList) {
+    final String shipperId = shipperService.getCurrentShipper().getId();
+    final List<PostStatus> statusEnumList =
+        Arrays.stream(statusList.split(",")).map(this::convertToEnum).toList();
+    return postRepository.findPostsByStatusAndShipperId(
+        shipperId, ShipperPostStatus.APPROVAL, statusEnumList);
   }
 
   public Post getPostByStatus(final String status, final String postId) {
@@ -212,6 +220,7 @@ public class PostService {
     }
   }
 
+  @Async("taskExecutor")
   public void selectShipperToShip(final Post post) {
     final List<ShipperPost> shipperPosts = shipperPostRepository.findAllByPostId(post.getId());
     ShipperPost sPost;
@@ -220,6 +229,7 @@ public class PostService {
       sPost = shipperPosts.getFirst();
       s = sPost.getShipper();
     } else { // find nearest shipper
+      log.info("Found more than one shipper in this region, trying to find nearest shipper.");
       List<String> shipperIds = shipperPosts.stream().map(ShipperPost::getId).toList();
       String shipperId =
           geoHashService.findNearestShipperId(
@@ -277,7 +287,7 @@ public class PostService {
 
   // Khởi động tác vụ định kỳ cho một Post cụ thể dựa trên postId
   public void pushDeliveryRequestToShipper(final Post post) {
-    // Lên lịch tác vụ để chạy xử lý cho Post này
+    if (scheduledTasks.containsKey(post.getId())) return;
     ScheduledFuture<?> future =
         scheduler.scheduleAtFixedRate(() -> processPost(post), 0, 5, TimeUnit.SECONDS);
     scheduledTasks.put(post.getId(), future);
@@ -292,7 +302,8 @@ public class PostService {
           .keySet()
           .forEach(
               shipperId -> {
-                if (isValidShipperToPushMsg(shipperId, post)) {
+                log.info("Found shipper: {}", shipperId);
+                if (isValidShipperToPushMsg(shipperId, post.getId())) {
                   try {
                     log.info("Pushing delivery request to shipper: {}", shipperId);
                     simpMessageSendingOperations.convertAndSend(
@@ -315,22 +326,21 @@ public class PostService {
   }
 
   private boolean isValidPostToPushMsg(final Post post) {
-    if (Duration.between(post.getPostTime(), LocalDateTime.now()).toMinutes() <= 15) {
+    if (Duration.between(post.getPostTime(), LocalDateTime.now()).toMinutes() <= 10) {
       return true;
     }
-    // Neu chua co shipper join sau 15s => tiep tuc push
+    // Neu chua co shipper join sau 10s => tiep tuc push
     return !shipperPostRepository.existsByPostId(post.getId());
   }
 
-  private boolean isValidShipperToPushMsg(final String shipperId, final Post post) {
+  private boolean isValidShipperToPushMsg(final String shipperId, final String postId) {
     Shipper s = shipperService.findById(shipperId);
     if (!onlineOfflineService.isUserSubscribed(
         s.getUser().getId(), "/topic/shipper/" + shipperId)) {
       return false;
     }
     // Neu da nhan duoc roi thi khong gui nua
-    return !redisService.checkKeyFieldValueExists(
-        RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
+    return !redisService.checkKeyFieldValueExists(RedisKey.SHIPPER_RECEIVED_MSG, postId, shipperId);
   }
 
   // Dừng và hủy tác vụ cho một Post cụ thể
@@ -377,6 +387,16 @@ public class PostService {
           "/topic/post/" + postId,
           Message.builder().messageType(MessageType.POST_WAS_TAKEN).build());
     }
+  }
+
+  @PreAuthorize("hasRole('SHIPPER')")
+  public PaymentResponse paid(final String postId) {
+    final Payment payment = paymentRepository.findByPostId(postId).orElse(null);
+    if (payment != null) {
+      payment.setPaidAt(LocalDateTime.now());
+      return paymentMapper.toPaymentResponse(paymentRepository.save(payment));
+    }
+    return null;
   }
 
   // Dừng tất cả tác vụ khi ứng dụng kết thúc

@@ -3,10 +3,7 @@ package com.nta.controller;
 import com.nta.dto.request.RatingCreationRequest;
 import com.nta.dto.request.UpdatePostStatusRequest;
 import com.nta.dto.request.post.PostCreationRequest;
-import com.nta.dto.response.ApiResponse;
-import com.nta.dto.response.NumShipperJoinedResponse;
-import com.nta.dto.response.RatingResponse;
-import com.nta.dto.response.ShipperResponse;
+import com.nta.dto.response.*;
 import com.nta.entity.Post;
 import com.nta.service.*;
 import lombok.AccessLevel;
@@ -87,7 +84,7 @@ public class PostController {
       @RequestParam(value = "status", required = false) String statusList) {
     List<Post> response;
     try {
-      response = postService.getPostsByLatestStatus(statusList);
+      response = postService.getPostsByStatusList(statusList);
     } catch (IllegalArgumentException e) {
       response = List.of();
     }
@@ -99,6 +96,11 @@ public class PostController {
   ApiResponse<Void> joinPost(@PathVariable String id) {
     postService.joinPost(id, shipperService.getCurrentShipper().getId());
     return ApiResponse.<Void>builder().result(null).build();
+  }
+
+  @PostMapping("/{id}/pay")
+  ApiResponse<PaymentResponse> paid(@PathVariable String id) {
+    return ApiResponse.<PaymentResponse>builder().result(postService.paid(id)).build();
   }
 
   @PostMapping("/{id}/select-shipper")

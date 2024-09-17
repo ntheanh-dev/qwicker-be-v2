@@ -45,6 +45,7 @@ public enum ErrorCode {
     INVALID_LOCATION_DATA(1300,"INVALID_LOCATION_DATA", HttpStatus.BAD_REQUEST),
     //Enum error paster
     INVALID_POST_STATUS(1350, "Invalid post status", HttpStatus.BAD_REQUEST),
+    INVALID_SHIPPER_POST_STATUS(1351, "Invalid shipper post status", HttpStatus.BAD_REQUEST),
     INVALID_STATISTIC_INCOME_TYPE(1351, "Invalid statistic income type", HttpStatus.BAD_REQUEST),
     ;
 
