@@ -36,10 +36,7 @@ public class RatingService {
   }
 
   public RatingResponse getRating(final String postId) {
-    final var rating =
-        ratingRepository
-            .findByPostIdAndShipperId(postId, userService.currentUser().getId())
-            .orElse(null);
+    final var rating = ratingRepository.findByPostIdAndShipperId(postId).orElse(null);
     return ratingMapper.toRatingResponse(rating);
   }
 }

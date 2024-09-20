@@ -58,7 +58,7 @@ public class PostService {
   ShipperMapper shipperMapper;
   OnlineOfflineService onlineOfflineService;
   PaymentMapper paymentMapper;
-  ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+  ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
   Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
   RedisService redisService;
 
@@ -146,6 +146,8 @@ public class PostService {
 
   public List<Post> getShipperPostsByStatusList(final String statusList) {
     final String shipperId = shipperService.getCurrentShipper().getId();
+    log.info("originalStatusList: {}", statusList);
+
     final List<PostStatus> statusEnumList =
         Arrays.stream(statusList.split(",")).map(this::convertToEnum).toList();
     return postRepository.findPostsByStatusAndShipperId(
@@ -213,6 +215,7 @@ public class PostService {
   }
 
   private PostStatus convertToEnum(final String status) {
+    log.info("status: {}", status);
     try {
       return PostStatus.valueOf(status);
     } catch (IllegalArgumentException e) {
@@ -220,7 +223,6 @@ public class PostService {
     }
   }
 
-  @Async("taskExecutor")
   public void selectShipperToShip(final Post post) {
     final List<ShipperPost> shipperPosts = shipperPostRepository.findAllByPostId(post.getId());
     ShipperPost sPost;
@@ -326,11 +328,13 @@ public class PostService {
   }
 
   private boolean isValidPostToPushMsg(final Post post) {
-    if (Duration.between(post.getPostTime(), LocalDateTime.now()).toMinutes() <= 10) {
+    if (Duration.between(post.getPostTime(), LocalDateTime.now()).toSeconds() <= 10) {
       return true;
     }
     // Neu chua co shipper join sau 10s => tiep tuc push
-    return !shipperPostRepository.existsByPostId(post.getId());
+    final var hasShipperJoined = shipperPostRepository.existsByPostId(post.getId());
+    log.info("hasShipperJoined: {}", hasShipperJoined);
+    return !hasShipperJoined;
   }
 
   private boolean isValidShipperToPushMsg(final String shipperId, final String postId) {
@@ -362,17 +366,14 @@ public class PostService {
       final Shipper s = shipperService.findById(shipperId);
       final Optional<ShipperPost> shipperPost =
           shipperPostRepository.findByShipperIdAndPostId(s.getId(), postId);
-      if (shipperPost.isPresent()) {
-        throw new AppException(ErrorCode.SHIPPER_POST_EXISTED);
-      } else {
-        ShipperPost newShipperPost =
+      if (shipperPost.isEmpty()) {
+        shipperPostRepository.save(
             ShipperPost.builder()
                 .shipper(s)
                 .joinedAt(LocalDateTime.now())
                 .status(ShipperPostStatus.JOINED)
                 .post(p)
-                .build();
-        shipperPostRepository.save(newShipperPost);
+                .build());
         // -------Update num joined shipper
         simpMessageSendingOperations.convertAndSend(
             "/topic/post/" + postId,
