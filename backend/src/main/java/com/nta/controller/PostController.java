@@ -98,8 +98,9 @@ public class PostController {
     return ApiResponse.<Void>builder().result(null).build();
   }
 
-  @PostMapping("/{id}/pay")
-  ApiResponse<PaymentResponse> paid(@PathVariable String id) {
+  @PreAuthorize("hasRole('SHIPPER')")
+  @PostMapping("/{id}/collect-cash")
+  ApiResponse<PaymentResponse> collectCash(@PathVariable String id) {
     return ApiResponse.<PaymentResponse>builder().result(postService.paid(id)).build();
   }
 

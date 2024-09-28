@@ -7,5 +7,9 @@ public enum PostStatus {
     CONFIRM_WITH_CUSTOMER, // shipper confirmed with customer go to pickup location
     SHIPPED,// shipper taken order and go to drop location
     DELIVERED,// shipped
-    CANCELLED
+    CANCELLED,
+
+    //use for post history only
+    COLLECTED_CASH,
+    PAID_BY_VNPAY
 }

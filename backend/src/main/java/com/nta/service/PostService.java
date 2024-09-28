@@ -24,8 +24,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,10 +59,9 @@ public class PostService {
   ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
   Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
   RedisService redisService;
-
-  private final GeoHashService geoHashService;
-  private final ShipperPostService shipperPostService;
-  private final LocationService locationService;
+  GeoHashService geoHashService;
+  ShipperPostService shipperPostService;
+  LocationService locationService;
 
   @Transactional
   public Post createPost(final PostCreationRequest request) {
@@ -390,10 +387,19 @@ public class PostService {
     }
   }
 
-  @PreAuthorize("hasRole('SHIPPER')")
+  //FOR COLLECTING CASH BY SHIPPER
   public PaymentResponse paid(final String postId) {
     final Payment payment = paymentRepository.findByPostId(postId).orElse(null);
-    if (payment != null) {
+    final Post post = postRepository.findById(postId).orElse(null);
+    if (payment != null && post !=null) {
+
+      postHistoryRepository.save(
+              PostHistory.builder()
+                      .status(PostStatus.COLLECTED_CASH)
+                      .post(post)
+                      .statusChangeDate(LocalDateTime.now())
+                      .build());
+
       payment.setPaidAt(LocalDateTime.now());
       return paymentMapper.toPaymentResponse(paymentRepository.save(payment));
     }
