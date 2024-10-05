@@ -252,16 +252,6 @@ public class PostService {
               .post(postMapper.toPostResponse(postRepository.save(post)))
               .messageType(MessageType.FOUND_SHIPPER)
               .build());
-      // ----------------Find shipper location in redis---------------
-      final ShipperDetailCache shipperDetailCache =
-          locationService.getCurrentShipperLocation(s.getId());
-      simpMessageSendingOperations.convertAndSend(
-          "/topic/post/" + post.getId(),
-          ShipperLocationResponse.builder()
-              .latitude(shipperDetailCache.getLatitude())
-              .longitude(shipperDetailCache.getLongitude())
-              .messageType(MessageType.SHIPPER_LOCATION)
-              .build());
       // update data in db
       postHistoryRepository.save(
           PostHistory.builder()
@@ -284,44 +274,47 @@ public class PostService {
     pushDeliveryRequestToShipper(post);
   }
 
-  // Khởi động tác vụ định kỳ cho một Post cụ thể dựa trên postId
   public void pushDeliveryRequestToShipper(final Post post) {
     if (scheduledTasks.containsKey(post.getId())) return;
     ScheduledFuture<?> future =
-        scheduler.scheduleAtFixedRate(() -> processPost(post), 0, 5, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(
+            () -> {
+              if (isValidPostToPushMsg(post)) { // Chua co shipper join post
+                log.info("Processing post {}", post.getId());
+                geoHashService
+                    .getShippersDetailCacheByGeoHash(
+                        post.getPickupLocation().getLatitude(),
+                        post.getPickupLocation().getLongitude())
+                    .keySet()
+                    .forEach(
+                        shipperId -> {
+                          log.info("Found shipper: {}", shipperId);
+                          if (isValidShipperToPushMsg(shipperId, post.getId())) {
+                            try {
+                              log.info("Pushing delivery request to shipper: {}", shipperId);
+                              simpMessageSendingOperations.convertAndSend(
+                                  "/topic/shipper/" + shipperId,
+                                  DeliveryRequest.builder()
+                                      .post(postMapper.toPostResponse(post))
+                                      .messageType(MessageType.DELIVERY_REQUEST)
+                                      .build());
+                              // Lưu lại những shipper da nhan msg
+                              redisService.hashSet(
+                                  RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
+                            } catch (Exception e) {
+                              log.error(e.getMessage());
+                            }
+                          }
+                        });
+              } else { // da qua 15s va co shipper join
+                selectShipperToShip(post);
+                stopScheduledTask(post.getId());
+              }
+            },
+            0,
+            5,
+            TimeUnit.SECONDS);
     scheduledTasks.put(post.getId(), future);
-  }
-
-  private void processPost(final Post post) {
-    if (isValidPostToPushMsg(post)) { // Chua co shipper join post
-      log.info("Processing post {}", post.getId());
-      geoHashService
-          .getShippersDetailCacheByGeoHash(
-              post.getPickupLocation().getLatitude(), post.getPickupLocation().getLongitude())
-          .keySet()
-          .forEach(
-              shipperId -> {
-                log.info("Found shipper: {}", shipperId);
-                if (isValidShipperToPushMsg(shipperId, post.getId())) {
-                  try {
-                    log.info("Pushing delivery request to shipper: {}", shipperId);
-                    simpMessageSendingOperations.convertAndSend(
-                        "/topic/shipper/" + shipperId,
-                        DeliveryRequest.builder()
-                            .post(postMapper.toPostResponse(post))
-                            .messageType(MessageType.DELIVERY_REQUEST)
-                            .build());
-                    // Lưu lại những shipper da nhan msg
-                    redisService.hashSet(RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
-                  } catch (Exception e) {
-                    log.error(e.getMessage());
-                  }
-                }
-              });
-    } else { // da qua 15s va co shipper join
-      selectShipperToShip(post);
-      stopScheduledTask(post.getId());
-    }
   }
 
   private boolean isValidPostToPushMsg(final Post post) {
@@ -387,18 +380,18 @@ public class PostService {
     }
   }
 
-  //FOR COLLECTING CASH BY SHIPPER
+  // FOR COLLECTING CASH BY SHIPPER
   public PaymentResponse paid(final String postId) {
     final Payment payment = paymentRepository.findByPostId(postId).orElse(null);
     final Post post = postRepository.findById(postId).orElse(null);
-    if (payment != null && post !=null) {
+    if (payment != null && post != null) {
 
       postHistoryRepository.save(
-              PostHistory.builder()
-                      .status(PostStatus.COLLECTED_CASH)
-                      .post(post)
-                      .statusChangeDate(LocalDateTime.now())
-                      .build());
+          PostHistory.builder()
+              .status(PostStatus.COLLECTED_CASH)
+              .post(post)
+              .statusChangeDate(LocalDateTime.now())
+              .build());
 
       payment.setPaidAt(LocalDateTime.now());
       return paymentMapper.toPaymentResponse(paymentRepository.save(payment));
