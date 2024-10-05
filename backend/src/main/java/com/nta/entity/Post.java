@@ -53,6 +53,6 @@ public class Post {
     Set<PostHistory> history;
 
     @OneToOne
-    @JoinColumn(name = "payment")
+    @JoinColumn(name = "payment_id")
     Payment payment;
 }

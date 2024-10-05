@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "user_id",nullable = false)
+    @Column(name = "product_id",nullable = false)
     String id;
     int quantity;
     String image;
