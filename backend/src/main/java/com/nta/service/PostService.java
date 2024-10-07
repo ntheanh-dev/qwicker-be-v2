@@ -18,12 +18,12 @@ import com.nta.model.ShipperDetailCache;
 import com.nta.repository.*;
 import com.nta.service.websocker.LocationService;
 import com.nta.service.websocker.OnlineOfflineService;
-import jakarta.annotation.PreDestroy;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,8 +56,7 @@ public class PostService {
   ShipperMapper shipperMapper;
   OnlineOfflineService onlineOfflineService;
   PaymentMapper paymentMapper;
-  ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-  Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
+  List<String> runningPost = new ArrayList<>();
   RedisService redisService;
   GeoHashService geoHashService;
   ShipperPostService shipperPostService;
@@ -120,8 +119,10 @@ public class PostService {
     postHistoryRepository.save(postHistory);
     payment.setPost(createdPost);
     paymentRepository.save(payment);
-    // --------------Find nearest shippers by async method---------
-    pushDeliveryRequestToShipper(createdPost);
+    if (paymentMethod.getName().equals("Tiền Mặt")) {
+      // --------------Find nearest shippers by async method---------
+      startPost(createdPost);
+    }
     return createdPost;
   }
 
@@ -271,50 +272,57 @@ public class PostService {
   public void pushDeliveryRequestToShipper(final String postId) {
     final Post post = findById(postId);
     if (post.getStatus() != PostStatus.PENDING) return;
-    pushDeliveryRequestToShipper(post);
+    startPost(post);
   }
 
-  public void pushDeliveryRequestToShipper(final Post post) {
-    if (scheduledTasks.containsKey(post.getId())) return;
-    ScheduledFuture<?> future =
-        scheduler.scheduleAtFixedRate(
-            () -> {
-              if (isValidPostToPushMsg(post)) { // Chua co shipper join post
-                log.info("Processing post {}", post.getId());
-                geoHashService
-                    .getShippersDetailCacheByGeoHash(
-                        post.getPickupLocation().getLatitude(),
-                        post.getPickupLocation().getLongitude())
-                    .keySet()
-                    .forEach(
-                        shipperId -> {
-                          log.info("Found shipper: {}", shipperId);
-                          if (isValidShipperToPushMsg(shipperId, post.getId())) {
-                            try {
-                              log.info("Pushing delivery request to shipper: {}", shipperId);
-                              simpMessageSendingOperations.convertAndSend(
-                                  "/topic/shipper/" + shipperId,
-                                  DeliveryRequest.builder()
-                                      .post(postMapper.toPostResponse(post))
-                                      .messageType(MessageType.DELIVERY_REQUEST)
-                                      .build());
-                              // Lưu lại những shipper da nhan msg
-                              redisService.hashSet(
-                                  RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
-                            } catch (Exception e) {
-                              log.error(e.getMessage());
-                            }
-                          }
-                        });
-              } else { // da qua 15s va co shipper join
-                selectShipperToShip(post);
-                stopScheduledTask(post.getId());
-              }
-            },
-            0,
-            5,
-            TimeUnit.SECONDS);
-    scheduledTasks.put(post.getId(), future);
+  public void startPost(final Post post) {
+    runningPost.add(post.getId());
+  }
+
+  @Scheduled(fixedRate = 10000)
+  public void pushDeliveryRequestToShipper() {
+    log.info("pushDeliveryRequestToShipper");
+    if (runningPost.isEmpty()) return;
+    final List<String> toRemove = new ArrayList<>();
+    runningPost.forEach(
+        id -> {
+          final Post post = findById(id);
+          if (post.getStatus() == PostStatus.PENDING) {
+            if (isValidPostToPushMsg(post)) { // Chua co shipper join post
+              log.info("Processing post {}", post.getId());
+              geoHashService
+                      .getShippersDetailCacheByGeoHash(
+                              post.getPickupLocation().getLatitude(), post.getPickupLocation().getLongitude())
+                      .keySet()
+                      .forEach(
+                              shipperId -> {
+                                log.info("Found shipper: {}", shipperId);
+                                if (isValidShipperToPushMsg(shipperId, post.getId())) {
+                                  try {
+                                    log.info("Pushing delivery request to shipper: {}", shipperId);
+                                    simpMessageSendingOperations.convertAndSend(
+                                            "/topic/shipper/" + shipperId,
+                                            DeliveryRequest.builder()
+                                                    .post(postMapper.toPostResponse(post))
+                                                    .messageType(MessageType.DELIVERY_REQUEST)
+                                                    .build());
+                                    // Lưu lại những shipper da nhan msg
+                                    redisService.hashSet(
+                                            RedisKey.SHIPPER_RECEIVED_MSG, post.getId(), shipperId);
+                                  } catch (Exception e) {
+                                    log.error(e.getMessage());
+                                  }
+                                }
+                              });
+            } else { // da qua 15s va co shipper join
+              selectShipperToShip(post);
+            }
+          } else {
+            toRemove.add(post.getId());
+          }
+        });
+    runningPost.removeAll(toRemove);
+    toRemove.clear();
   }
 
   private boolean isValidPostToPushMsg(final Post post) {
@@ -336,16 +344,6 @@ public class PostService {
     // Neu da nhan duoc roi thi khong gui nua
     return !redisService.checkKeyFieldValueExists(RedisKey.SHIPPER_RECEIVED_MSG, postId, shipperId);
   }
-
-  // Dừng và hủy tác vụ cho một Post cụ thể
-  private void stopScheduledTask(String postId) {
-    ScheduledFuture<?> future = scheduledTasks.get(postId);
-    if (future != null) {
-      future.cancel(true);
-      scheduledTasks.remove(postId);
-    }
-  }
-
   // NOTE: for websocket
   public void joinPost(final String postId, final String shipperId) {
     final Post p =
@@ -399,34 +397,8 @@ public class PostService {
     return null;
   }
 
-  // Dừng tất cả tác vụ khi ứng dụng kết thúc
-  @PreDestroy
-  public void destroy() {
-    scheduler.shutdown();
-    scheduledTasks.forEach((postId, future) -> future.cancel(true));
-  }
-
   // NOTE: for api test only
   public void pushShipperLocationToUser(final String postId) {
-    // Lên lịch tác vụ để chạy xử lý cho Post này
-    Shipper s = shipperService.getCurrentShipper();
-    final ShipperDetailCache shipperDetailCache =
-        locationService.getCurrentShipperLocation(s.getId());
-    ScheduledFuture<?> future =
-        scheduler.scheduleAtFixedRate(
-            () -> {
-              simpMessageSendingOperations.convertAndSend(
-                  "/topic/post/" + postId,
-                  ShipperLocationResponse.builder()
-                      .latitude(shipperDetailCache.getLatitude())
-                      .longitude(shipperDetailCache.getLongitude())
-                      .messageType(MessageType.SHIPPER_LOCATION)
-                      .build());
-              log.info("Pushing shipper location to user: {}", postId);
-            },
-            0,
-            5,
-            TimeUnit.SECONDS);
-    scheduledTasks.put("TEST", future);
+
   }
 }

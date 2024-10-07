@@ -72,6 +72,11 @@ public class PostController {
         .build();
   }
 
+  @PostMapping("/{id}/push-delivery-request")
+  public void pushDeliveryRequest(@PathVariable(value = "id") String postId) {
+    postService.pushDeliveryRequestToShipper(postId);
+  }
+
   @GetMapping("/{id}/num-shipper-joined")
   ApiResponse<NumShipperJoinedResponse> getNumShipperJoined(@PathVariable String id) {
     final var response =
