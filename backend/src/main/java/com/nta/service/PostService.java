@@ -281,7 +281,6 @@ public class PostService {
 
   @Scheduled(fixedRate = 10000)
   public void pushDeliveryRequestToShipper() {
-    log.info("pushDeliveryRequestToShipper");
     if (runningPost.isEmpty()) return;
     final List<String> toRemove = new ArrayList<>();
     runningPost.forEach(

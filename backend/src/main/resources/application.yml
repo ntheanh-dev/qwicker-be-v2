@@ -1,16 +1,60 @@
 server:
-    port: 8080
-    servlet:
-        context-path: /api
+  port: 8080
+  servlet:
+    context-path: /api
 spring:
-    datasource:
-        url: "jdbc:mysql://localhost:3306/qwickerdb"
-        username:  "root"
-        password: "Admin@123"
-    jpa:
-        show-sql: true
-        hibernate:
-            ddl-auto: update
-    reactor:
-        debug-agent:
-            enabled: true
+  datasource:
+    url: "jdbc:mysql://${mysqldb:localhost}:3306/qwickerdb"
+    username: "root"
+    password: "Admin@123"
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  reactor:
+    debug-agent:
+      enabled: true
+  mail:
+    default-encoding: UTF-8
+    host: "smtp.gmail.com"
+    username: ""
+    password: ""
+    port: 587
+    protocol: "smtp"
+  data:
+    redis:
+      host: "${redis:localhost}"
+      port: 6379
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          signer-key: "29A1E019A311440FF025957809748C9D"
+          access-token-valid-duration: 3 # in hour
+          refresh-token-valid-duration: 3 # in day
+  cloudinary:
+    name: ""
+    key: ""
+    secret: ""
+
+  bingmapkey: ""
+
+  location:
+    updateLocationTime: 4 # in second
+    geohashPrecision: 5
+payment:
+  vnPay:
+    url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+    tmnCode: ""
+    secretKey: ""
+    returnUrl: "http://${backend:localhost}}:8080/api/v1/payment/vn-pay-callback"
+    version: "2.1.0"
+    command: "pay"
+    orderType: "other"
+frontend:
+  caller:
+    host: "http://localhost:3000"
